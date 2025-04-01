@@ -8,7 +8,6 @@
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
 
-
 #include <Kismet/KismetMaterialLibrary.h>
 #include <Kismet/KismetRenderingLibrary.h>
 #include "TextureCompiler.h"
@@ -81,8 +80,8 @@ void FChannelSplitter::SplitTextures()
             continue;
         }
 
+        //This ensures texture is fully loaded before using it for the render target
         FTextureCompilingManager::Get().FinishCompilation({ Texture });
-
         Texture->SetForceMipLevelsToBeResident(30.f);
         Texture->WaitForStreaming(true);
 
@@ -114,7 +113,11 @@ void FChannelSplitter::SplitTextures()
             Material->SetTextureParameterValue(TEXT("Texture"), Texture);
             Material->EnsureIsComplete();
 
-            const FString PackageName = FString::Printf(TEXT("%s%s"), *Texture->GetPathName(), *SuffixArray[i]);
+            FString PathName = Texture->GetPathName();
+            int32 DotIndex = 0;
+            PathName.FindLastChar(TEXT('.'), DotIndex);
+            PathName = PathName.Left(DotIndex);
+            const FString PackageName = FString::Printf(TEXT("%s%s"), *PathName, *SuffixArray[i]);
 
             UTextureRenderTarget2D* tempRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, TexResX, TexResY, RTF_R16f);
             UKismetRenderingLibrary::DrawMaterialToRenderTarget(World, tempRT , Material);
