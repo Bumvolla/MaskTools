@@ -11,6 +11,8 @@
 
 #include <Kismet/KismetMaterialLibrary.h>
 #include <Kismet/KismetRenderingLibrary.h>
+#include "TextureCompiler.h"
+
 
 #define LOCTEXT_NAMESPACE "FChannelSplitter"
 
@@ -70,10 +72,21 @@ void FChannelSplitter::SplitTextures()
 
     for (FAssetData AssetData : SelectedObjects)
     {
-        UObject* Object = AssetData.GetAsset();
-        UTexture2D* Texture = Cast<UTexture2D>(Object);
-        if (!Texture) bAllSelectedAssetsAreTextures = false;
-        else SelectedTextures.Add(Texture);
+        TSoftObjectPtr<UTexture2D> SoftTexture(AssetData.GetSoftObjectPath());
+        UTexture2D* Texture = SoftTexture.LoadSynchronous();
+
+        if (!Texture)
+        {
+            bAllSelectedAssetsAreTextures = false;
+            continue;
+        }
+
+        FTextureCompilingManager::Get().FinishCompilation({ Texture });
+
+        Texture->SetForceMipLevelsToBeResident(30.f);
+        Texture->WaitForStreaming(true);
+
+        SelectedTextures.Add(Texture);
     }
 
     if (!bAllSelectedAssetsAreTextures) return;
@@ -97,7 +110,9 @@ void FChannelSplitter::SplitTextures()
         int i = 0;
         for (UMaterialInstanceDynamic* Material : SplitMaterialsArray)
         {
+
             Material->SetTextureParameterValue(TEXT("Texture"), Texture);
+            Material->EnsureIsComplete();
 
             const FString PackageName = FString::Printf(TEXT("%s%s"), *Texture->GetPathName(), *SuffixArray[i]);
 

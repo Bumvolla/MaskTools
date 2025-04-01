@@ -13,13 +13,13 @@ public:
 	void StartupModule() override;
 	void ShutdownModule() override;
 
+private:
 	void InitCBMenuExtension();
 	TSharedRef<FExtender> CreateCBMenuExtension(const TArray<FAssetData>& SelectedAssets);
 	void AddCBMenuExtension(FMenuBuilder& MenuBuilder);
 	void SplitTextures();
 
 	TArray<FAssetData> AssetsSelected;
-
 	const TArray<FString> SuffixArray = { TEXT("_R"), TEXT("_G") ,TEXT("_B"), TEXT("_A") };
 	
 };
