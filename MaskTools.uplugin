@@ -1,0 +1,49 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "MaskTools",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "Sora Mas",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "MaskTools",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+				{
+			"Name": "ChannelMixer",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
+				{
+			"Name": "EnchancedEditorLogging",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ChannelSplitter",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "EditorScriptingUtilities",
+			"Enabled": true
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true
+		}
+	]
+}
