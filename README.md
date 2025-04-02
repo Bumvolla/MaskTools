@@ -17,6 +17,7 @@
 ## Features
 
 - Engine built-in system to package grayscale textures into a single mask texture without leaving the editor.
+- Texture authoring previsualization.
 - RMB a mask texture to split each one of it's RGB channel in a single texture.
 
 ##
