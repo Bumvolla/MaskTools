@@ -8,6 +8,7 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Widgets/SWindow.h"
 #include "Logging/LogMacros.h"
+#include "ChannelMixerStyle.h"
 #include <Kismet/KismetMaterialLibrary.h>
 
 #define LOCTEXT_NAMESPACE "FChannelMixer"
@@ -33,6 +34,8 @@ FChannelMixer::FChannelMixer()
 void FChannelMixer::StartupModule()
 {
     InitToolsMenuExtension();
+
+    ChannelMixerStyle::InitializeIcons();
 }
 
 void FChannelMixer::ShutdownModule()
@@ -42,6 +45,8 @@ void FChannelMixer::ShutdownModule()
         FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
         LevelEditorModule.GetMenuExtensibilityManager()->RemoveExtender(ToolbarExtender);
     }
+
+    ChannelMixerStyle::ShutDown();
 }
 
 void FChannelMixer::InitToolsMenuExtension()
@@ -64,7 +69,7 @@ void FChannelMixer::AddToolsMenuEntry(FMenuBuilder& MenuBuilder)
     MenuBuilder.AddMenuEntry(
         FText::FromString(TEXT("Open Tex Mixer")),
         FText::FromString(TEXT("Open the texture mixer window")),
-        FSlateIcon(),
+        FSlateIcon(ChannelMixerStyle::GetStyleSetName(), "Tools.MixChannels"),
         FUIAction(FExecuteAction::CreateRaw(this, &FChannelMixer::OpenTextureMixerWindow))
     );
 }

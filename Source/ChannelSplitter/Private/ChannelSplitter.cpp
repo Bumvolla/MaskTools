@@ -12,17 +12,20 @@
 #include <Kismet/KismetRenderingLibrary.h>
 #include "TextureCompiler.h"
 
+#include "ChannelSpliterStyle.h"
+
 
 #define LOCTEXT_NAMESPACE "FChannelSplitter"
 
 void FChannelSplitter::StartupModule()
 {
     InitCBMenuExtension();
+    ChannelSpliterStyle::InitializeIcons();
 }
 
 void FChannelSplitter::ShutdownModule()
 {
-	
+    ChannelSpliterStyle::ShutDown();
 }
 
 void FChannelSplitter::InitCBMenuExtension()
@@ -55,7 +58,7 @@ void FChannelSplitter::AddCBMenuExtension(FMenuBuilder& MenuBuilder)
 {
     MenuBuilder.AddMenuEntry(FText::FromString(TEXT("Split Channels")),
         FText::FromString(TEXT("Split each channel of this texture to a unique grayscale texture")),
-        FSlateIcon(),//(FUnrealToolsStyle::GetStyleSetName(), "ContentBrowser.MakeMask"),
+        FSlateIcon(ChannelSpliterStyle::GetStyleSetName(), "ContentBrowser.SplitChannels"),
         FExecuteAction::CreateRaw(this, &FChannelSplitter::SplitTextures));
 }
 
