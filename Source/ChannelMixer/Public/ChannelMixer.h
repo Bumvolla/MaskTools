@@ -16,7 +16,7 @@ class FChannelMixer : public IModuleInterface
 {
 
 public:
-    FChannelMixer();
+
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
 
@@ -45,10 +45,10 @@ public:
     TSharedPtr<FSlateBrush> PreviewBrush;
 
     FString TexturePrefix;
-    FString TextureName;
+    FString TextureName = TEXT("GeneratedTexture");
     FString TextureSuffix;
-    FString ExportPath;
-    int32 TextureResolution;
+    FString ExportPath = TEXT("GeneratedMasks");
+    int32 TextureResolution = 512;
 
 
 private:

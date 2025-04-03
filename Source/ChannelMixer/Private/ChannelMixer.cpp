@@ -13,24 +13,6 @@
 
 #define LOCTEXT_NAMESPACE "FChannelMixer"
 
-FChannelMixer::FChannelMixer()
-    : PluginContentDir(IPluginManager::Get().FindPlugin(TEXT("UnrealToolsPlugin"))->GetContentDir())
-    , ExportPath(TEXT("GeneratedMasks"))
-    , TexturePrefix(TEXT(""))
-    , TextureName(TEXT("GeneratedTexture"))
-    , TextureSuffix(TEXT(""))
-    , TextureResolution(512)
-    , CombinedTexture(nullptr)
-    , RedTexture(nullptr)
-    , GreenTexture(nullptr)
-    , BlueTexture(nullptr)
-    , AlphaTexture(nullptr)
-    , BlendMaterial(nullptr)
-    , PreviewTexture(UTexture2D::CreateTransient(512, 512, PF_B8G8R8A8))
-{
-
-}
-
 void FChannelMixer::StartupModule()
 {
     InitToolsMenuExtension();
@@ -82,6 +64,7 @@ void FChannelMixer::OpenTextureMixerWindow()
     UWorld* World = GEditor->GetEditorWorldContext().World();
     UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureMixer"));
     BlendMaterial = UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, BaseMaterial);
+    PreviewTexture = UTexture2D::CreateTransient(512, 512, PF_B8G8R8A8);
 
 }
 
