@@ -13,15 +13,17 @@
     <br/>
     <a href="https://bumvolla.github.io/2024/12/19/A2FDocs/"><strong>Docs</strong></a>
   </p>
-
+  
 ## Features
+### Channel Mixer
+- Choose up to 4 grayscale textures to package into a single RGBA texture.
+- Modify texture resolution and export settings.
+- Open at **Tools -> Texture Mixer**.
 
-- Engine built-in system to package grayscale textures into a single mask texture without leaving the editor.
-- Texture authoring previsualization.
-- RMB a mask texture to split each one of it's RGB channel in a single texture.
+### Channel Splitter
+- Split any texture in its RGBA channels.
+- Call with **RMB->Splitt Channels**.
 
-##
+#
 
-![Screenshot 2025-04-02 230420](https://github.com/user-attachments/assets/6d2d6d8e-d661-4777-b33c-7c4e8f4fafdc)
-
-    
+<img width="755" alt="Screenshot 2025-04-06 220947" src="https://github.com/user-attachments/assets/7aa34d4a-0e6a-4d5f-bab5-5289514a3672" />
