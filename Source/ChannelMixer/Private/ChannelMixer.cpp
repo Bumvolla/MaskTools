@@ -49,7 +49,7 @@ void FChannelMixer::InitToolsMenuExtension()
 void FChannelMixer::AddToolsMenuEntry(FMenuBuilder& MenuBuilder)
 {
     MenuBuilder.AddMenuEntry(
-        FText::FromString(TEXT("Open Tex Mixer")),
+        FText::FromString(TEXT("Texture Mixer")),
         FText::FromString(TEXT("Open the texture mixer window")),
         FSlateIcon(ChannelMixerStyle::GetStyleSetName(), "Tools.MixChannels"),
         FUIAction(FExecuteAction::CreateRaw(this, &FChannelMixer::OpenTextureMixerWindow))
