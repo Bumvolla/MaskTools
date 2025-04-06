@@ -34,6 +34,7 @@ FReply FChannelMixerUtils::ExportTexture(FChannelMixer* Mixer)
         TextureMipGenSettings::TMGS_NoMipmaps
     );
 
+
     UEnchancedNotifications::OpenCBDirNotification(FString::Printf(TEXT("Successfully exported combined texture to /Content/%s"), *Mixer->ExportPath), FString::Printf(TEXT("/Game/%s"), *Mixer->ExportPath));
 
     return FReply::Handled();

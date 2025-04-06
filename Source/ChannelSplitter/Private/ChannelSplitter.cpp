@@ -65,11 +65,12 @@ void FChannelSplitter::AddCBMenuExtension(FMenuBuilder& MenuBuilder)
 void FChannelSplitter::SplitTextures()
 {
 
+    UWorld* World = GEditor->GetEditorWorldContext().World();
+
     FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>(TEXT("ContentBrowser"));
     TArray<FAssetData> SelectedObjects;
     ContentBrowserModule.Get().GetSelectedAssets(SelectedObjects);
 
-    bool bAllSelectedAssetsAreTextures = true;
     TArray<UTexture2D*> SelectedTextures;
 
     for (FAssetData AssetData : SelectedObjects)
@@ -79,7 +80,6 @@ void FChannelSplitter::SplitTextures()
 
         if (!Texture)
         {
-            bAllSelectedAssetsAreTextures = false;
             continue;
         }
 
@@ -91,9 +91,6 @@ void FChannelSplitter::SplitTextures()
         SelectedTextures.Add(Texture);
     }
 
-    if (!bAllSelectedAssetsAreTextures) return;
-
-    UWorld* World = GEditor->GetEditorWorldContext().World();
 
     for (UTexture2D* Texture : SelectedTextures)
     {
@@ -105,31 +102,51 @@ void FChannelSplitter::SplitTextures()
         SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_B")),FName("Blue"), EMIDCreationFlags::Transient));
         SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_A")),FName("Alpha"), EMIDCreationFlags::Transient));
 
+        // Copy original texture values and settings
+        int32 OgTexResX = Texture->GetImportedSize().X;
+        int32 OgTexResY = Texture->GetImportedSize().Y;
+        TEnumAsByte<TextureMipGenSettings> MipGenSettings = Texture->MipGenSettings;
+        int32 LodBias = Texture->LODBias;
+        int32 MaxTextureSize = Texture->MaxTextureSize;
+        bool bOodlePreserveExtremes = Texture->bOodlePreserveExtremes;
+        bool bPreserveBorders = Texture->bPreserveBorder;
+        TEnumAsByte<TextureCookPlatformTilingSettings> CookPlatformTilingSettings = Texture->CookPlatformTilingSettings;
+        uint8 NeverStream = Texture->NeverStream;
 
-        int32 TexResX = Texture->GetImportedSize().X;
-        int32 TexResY = Texture->GetImportedSize().Y;
-
+        // Iterator for the suffixes
         int i = 0;
+
+        // Export each one of the channels
         for (UMaterialInstanceDynamic* Material : SplitMaterialsArray)
         {
 
             Material->SetTextureParameterValue(TEXT("Texture"), Texture);
             Material->EnsureIsComplete();
 
+            // I'm using GetPathName because it returns editor relative path
+            // It must be cleaned afterwards
             FString PathName = Texture->GetPathName();
             int32 DotIndex = 0;
             PathName.FindLastChar(TEXT('.'), DotIndex);
             PathName = PathName.Left(DotIndex);
             const FString PackageName = FString::Printf(TEXT("%s%s"), *PathName, *SuffixArray[i]);
 
-            UTextureRenderTarget2D* tempRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, TexResX, TexResY, RTF_R16f);
+            UTextureRenderTarget2D* tempRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, OgTexResX, OgTexResY, RTF_R16f);
             UKismetRenderingLibrary::DrawMaterialToRenderTarget(World, tempRT , Material);
 
             UTexture2D* ExportedTexture = UKismetRenderingLibrary::RenderTargetCreateStaticTexture2DEditorOnly(
                 tempRT,
                 PackageName,
                 TextureCompressionSettings::TC_Grayscale,
-                TextureMipGenSettings::TMGS_NoMipmaps);
+                MipGenSettings);
+
+            // Paste original texture values
+            ExportedTexture->LODBias = LodBias;
+            ExportedTexture->MaxTextureSize = MaxTextureSize;
+            ExportedTexture->bOodlePreserveExtremes = bOodlePreserveExtremes;
+            ExportedTexture->bPreserveBorder = bPreserveBorders;
+            ExportedTexture-> CookPlatformTilingSettings = CookPlatformTilingSettings;
+            ExportedTexture->NeverStream = NeverStream;
 
             i++;
         }
