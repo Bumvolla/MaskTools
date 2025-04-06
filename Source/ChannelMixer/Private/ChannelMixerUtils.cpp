@@ -14,6 +14,8 @@
 #include "LevelEditor.h"
 #include "EnchancedEditorLogging/Public/EnchancedNotifications.h"
 
+#include "TextureCompiler.h"
+
 
 FReply FChannelMixerUtils::ExportTexture(FChannelMixer* Mixer)
 {
@@ -49,6 +51,12 @@ FReply FChannelMixerUtils::ImportTextureFromCB(FChannelMixer* Mixer, const FStri
         UObject* SelectedObject = SelectedAssets[0].GetAsset();
         if (UTexture2D* SelectedTexture = Cast<UTexture2D>(SelectedObject))
         {
+
+            //This ensures texture is fully loaded before using it for the render target
+            FTextureCompilingManager::Get().FinishCompilation({ SelectedTexture });
+            SelectedTexture->SetForceMipLevelsToBeResident(30.f);
+            SelectedTexture->WaitForStreaming(true);
+
             CreateAndSetPreviewBrush(SelectedTexture, ChannelImage, ChannelTexture);
             SetTextureParameterValue(ChannelName, ChannelTexture, Mixer);
         }
