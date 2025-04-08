@@ -1,6 +1,5 @@
 #include "ChannelMixerUtils.h"
 #include "ChannelMixer.h"
-#include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -13,31 +12,38 @@
 #include "Logging/LogMacros.h"
 #include "LevelEditor.h"
 #include "EnchancedEditorLogging/Public/EnchancedNotifications.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+
+
 
 #include "TextureCompiler.h"
 
 
-FReply FChannelMixerUtils::ExportTexture(FChannelMixer* Mixer)
+void FChannelMixerUtils::UpdatePreviewTexture(FChannelMixer* Mixer)
 {
-    if (!Mixer || !Mixer->CombinedTexture)
+    if (!Mixer) return;
+
+    UWorld* World = GEditor->GetEditorWorldContext().World();
+
+    Mixer->CombinedTexture = UKismetRenderingLibrary::CreateRenderTarget2D(World, Mixer->TextureResolution, Mixer->TextureResolution);
+    Mixer->CombinedTexture->AddToRoot();
+
+    UKismetRenderingLibrary::ClearRenderTarget2D(World, Mixer->CombinedTexture, FLinearColor(0, 0, 0, 255));
+
+    UKismetRenderingLibrary::DrawMaterialToRenderTarget(World, Mixer->CombinedTexture, Mixer->BlendMaterial);
+
+    if (!Mixer->PreviewBrush.IsValid())
     {
-        UE_LOG(LogTemp, Error, TEXT("ExportTexture: CombinedTexture is null"));
-        return FReply::Handled();
+        Mixer->PreviewBrush = MakeShared<FSlateBrush>();
     }
 
-    FString PackageName = BuildPackagePath(Mixer);
+    Mixer->PreviewBrush->SetResourceObject(Mixer->CombinedTexture);
+    if (Mixer->PreviewSImage.IsValid())
+    {
+        Mixer->PreviewSImage->SetImage(Mixer->PreviewBrush.Get());
+    }
 
-    UTexture2D* ExportedTexture = UKismetRenderingLibrary::RenderTargetCreateStaticTexture2DEditorOnly(
-        Mixer->CombinedTexture,
-        PackageName,
-        TextureCompressionSettings::TC_Masks,
-        TextureMipGenSettings::TMGS_NoMipmaps
-    );
-
-
-    UEnchancedNotifications::OpenCBDirNotification(FString::Printf(TEXT("Successfully exported combined texture to /Content/%s"), *Mixer->ExportPath), FString::Printf(TEXT("/Game/%s"), *Mixer->ExportPath));
-
-    return FReply::Handled();
+    FSlateApplication::Get().Tick();
 }
 
 FReply FChannelMixerUtils::ImportTextureFromCB(FChannelMixer* Mixer, const FString& ChannelName, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture)
@@ -52,11 +58,9 @@ FReply FChannelMixerUtils::ImportTextureFromCB(FChannelMixer* Mixer, const FStri
         UObject* SelectedObject = SelectedAssets[0].GetAsset();
         if (UTexture2D* SelectedTexture = Cast<UTexture2D>(SelectedObject))
         {
-
             //This ensures texture is fully loaded before using it for the render target
-            FTextureCompilingManager::Get().FinishCompilation({ SelectedTexture });
-            SelectedTexture->SetForceMipLevelsToBeResident(30.f);
-            SelectedTexture->WaitForStreaming(true);
+            ForceTextureCompilation(SelectedTexture);
+
 
             CreateAndSetPreviewBrush(SelectedTexture, ChannelImage, ChannelTexture);
             SetTextureParameterValue(ChannelName, ChannelTexture, Mixer);
@@ -72,6 +76,28 @@ FReply FChannelMixerUtils::ImportTextureFromCB(FChannelMixer* Mixer, const FStri
     }
 
     UpdatePreviewTexture(Mixer);
+    return FReply::Handled();
+}
+
+FReply FChannelMixerUtils::ExportTexture(FChannelMixer* Mixer)
+{
+    if (!Mixer || !Mixer->CombinedTexture)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ExportTexture: CombinedTexture is null"));
+        return FReply::Handled();
+    }
+
+    FString PackageName = Mixer->BuildPackagePath();
+
+    UTexture2D* ExportedTexture = UKismetRenderingLibrary::RenderTargetCreateStaticTexture2DEditorOnly(
+        Mixer->CombinedTexture,
+        PackageName,
+        TextureCompressionSettings::TC_Masks,
+        TextureMipGenSettings::TMGS_NoMipmaps
+    );
+
+    UEnchancedNotifications::OpenCBDirNotification(FString::Printf(TEXT("Successfully exported combined texture to /Content/%s"), *Mixer->ExportPath), FString::Printf(TEXT("/Game/%s"), *Mixer->ExportPath));
+
     return FReply::Handled();
 }
 
@@ -93,33 +119,15 @@ int32 FChannelMixerUtils::ResFinder(FString SelectedOption)
     return *ResMap.Find(SelectedOption);
 }
 
-FReply FChannelMixerUtils::RestoreSlotDefaultTexture(const FString& ChannelName, FChannelMixer* Mixer)
+FReply FChannelMixerUtils::RestoreSlotDefaultTexture(const FString& ChannelName, TSharedPtr<SImage> SlateImage, UTexture2D* Texture, FChannelMixer* Mixer)
 {
 
     UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, TEXT("/UnrealToolsPlugin/MM/Textures/Checkers/T_Black"));;
 
-    if (ChannelName == TEXT("Red"))
-    {
-        CreateAndSetPreviewBrush(Texture, Mixer->RedChannelImage, &Mixer->RedTexture);
-        SetTextureParameterValue(ChannelName, &Mixer->RedTexture, Mixer);
-    }
-    if (ChannelName == TEXT("Green"))
-    {
-        CreateAndSetPreviewBrush(Texture, Mixer->GreenChannelImage, &Mixer->GreenTexture);
-        SetTextureParameterValue(ChannelName, &Mixer->GreenTexture, Mixer);
-    }
-    if (ChannelName == TEXT("Blue"))
-    {
-        CreateAndSetPreviewBrush(Texture, Mixer->BlueChannelImage, &Mixer->BlueTexture);
-        SetTextureParameterValue(ChannelName, &Mixer->BlueTexture, Mixer);
-    }
-    if (ChannelName == TEXT("Alpha"))
-    {
-        CreateAndSetPreviewBrush(Texture, Mixer->AlphaChannelImage, &Mixer->AlphaTexture);
-        SetTextureParameterValue(ChannelName, &Mixer->AlphaTexture, Mixer);
-    }
+    CreateAndSetPreviewBrush(Texture, SlateImage, &Texture);
+    SetTextureParameterValue(ChannelName, &Texture, Mixer);
 
-    FChannelMixerUtils::UpdatePreviewTexture(Mixer);
+    UpdatePreviewTexture(Mixer);
     FSlateApplication::Get().Tick();
 
     return FReply::Handled();
@@ -135,48 +143,87 @@ void FChannelMixerUtils::CreateAndSetPreviewBrush(UTexture2D* NewTexture, TShare
 
 void FChannelMixerUtils::SetTextureParameterValue(const FString& ChannelName, UTexture2D** ChannelTexture, FChannelMixer* Mixer)
 {
-    if (Mixer->BlendMaterial)
-    {
-        Mixer->BlendMaterial->SetTextureParameterValue(FName(ChannelName), *ChannelTexture);
-    }
+    if (Mixer->BlendMaterial) Mixer->BlendMaterial->SetTextureParameterValue(FName(ChannelName), *ChannelTexture);
 }
 
-void FChannelMixerUtils::UpdatePreviewTexture(FChannelMixer* Mixer)
+
+
+
+
+
+
+#pragma region General utilities
+UTexture2D* FChannelMixerUtils::CreateMaskFromGrayscales(UTexture2D* RedChannel, UTexture2D* GreenChannel, UTexture2D* BlueChannel, UTexture2D* AlphaChannel, const int32& TargetResolution)
 {
-    if (!Mixer) return;
 
     UWorld* World = GEditor->GetEditorWorldContext().World();
 
-    Mixer->CombinedTexture = UKismetRenderingLibrary::CreateRenderTarget2D(World, Mixer->TextureResolution, Mixer->TextureResolution);
-    Mixer->CombinedTexture->AddToRoot();
+    UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureMixer"));
+    UMaterialInstanceDynamic* MaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, BaseMaterial);
 
-    UKismetRenderingLibrary::ClearRenderTarget2D(World, Mixer->CombinedTexture, FLinearColor(0, 0, 0, 255));
-
-    UKismetRenderingLibrary::DrawMaterialToRenderTarget(World, Mixer->CombinedTexture, Mixer->BlendMaterial);
-
-    if (!Mixer->PreviewBrush.IsValid())
+    TArray<UTexture2D*> TexturesArray = { RedChannel, GreenChannel, BlueChannel, AlphaChannel };
+    for (UTexture2D* Texture : TexturesArray)
     {
-        Mixer->PreviewBrush = MakeShared<FSlateBrush>();
+        ForceTextureCompilation(Texture);
     }
 
-    Mixer->PreviewBrush->SetResourceObject(Mixer->CombinedTexture);
-    if (Mixer->PreviewImage.IsValid())
-    {
-        Mixer->PreviewImage->SetImage(Mixer->PreviewBrush.Get());
-    }
+    MaterialInstance->SetTextureParameterValue(TEXT("Red"), RedChannel);
+    MaterialInstance->SetTextureParameterValue(TEXT("Green"), GreenChannel);
+    MaterialInstance->SetTextureParameterValue(TEXT("Blue"), BlueChannel);
+    MaterialInstance->SetTextureParameterValue(TEXT("Alpha"), AlphaChannel);
+    MaterialInstance->EnsureIsComplete();
 
-    FSlateApplication::Get().Tick();
+    UTextureRenderTarget2D* tempRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, TargetResolution, TargetResolution, RTF_RGBA16f);
+    UKismetRenderingLibrary::DrawMaterialToRenderTarget(World, tempRT, MaterialInstance);
+
+    return CreateTextureFromRT(tempRT);    
 }
 
-FString FChannelMixerUtils::BuildPackagePath(FChannelMixer* Mixer)
+bool FChannelMixerUtils::SaveTextureToAsset(UTexture2D* Texture, const FString& SavePath)
 {
-    if (!Mixer) return FString();
+    UPackage* Package = CreatePackage(*SavePath);
+    UTexture2D* NewTexture = DuplicateObject<UTexture2D>(Texture, Package, *SavePath);
 
-    FString tempPrefix = Mixer->GetTexturePrefix().IsEmpty() ? TEXT("") : FString::Printf(TEXT("%s_"), *Mixer->GetTexturePrefix());
-    // This should be overrided with a settings default name
-    FString tempName = Mixer->GetTextureName().IsEmpty() ? TEXT("GeneratedMask") : Mixer->GetTextureName();
-    FString tempSuffix = Mixer->GetTextureSuffix().IsEmpty() ? TEXT("") : FString::Printf(TEXT("_%s"), *Mixer->GetTextureSuffix());
-    FString AssetName = FString::Printf(TEXT("%s%s%s"), *tempPrefix, *tempName, *tempSuffix);
-    FString PackageName = FString::Printf(TEXT("/Game/%s/%s"), *Mixer->GetExportPath(), *AssetName);
-    return PackageName;
+    NewTexture->SetFlags(RF_Public | RF_Standalone);
+    Package->MarkPackageDirty();
+    FAssetRegistryModule::AssetCreated(NewTexture);
+
+    FString PackageFileName = FPackageName::LongPackageNameToFilename(SavePath, FPackageName::GetAssetPackageExtension());
+    return UPackage::SavePackage(Package, NewTexture, EObjectFlags::RF_Public | RF_Standalone, *PackageFileName);
 }
+
+UTexture2D* FChannelMixerUtils::CreateTextureFromRT(UTextureRenderTarget2D* RenderTarget)
+{
+
+    const int32 TexResX = RenderTarget->SizeX;
+    const int32 TexResY = RenderTarget->SizeY;
+
+    UTexture2D* OutTexture = UTexture2D::CreateTransient(TexResX, TexResY);
+    OutTexture->CompressionSettings = TextureCompressionSettings::TC_Masks;
+    OutTexture->MipGenSettings = TextureMipGenSettings::TMGS_FromTextureGroup;
+    OutTexture->AddToRoot();
+
+    TArray<FColor> RTColor;
+    RenderTarget->GameThread_GetRenderTargetResource()->ReadPixels(RTColor);
+    const int32 TextureDataSize = RTColor.Num() * sizeof(FColor);
+
+    void* Data = OutTexture->GetPlatformData()->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
+
+    FMemory::Memcpy(Data, RTColor.GetData(), TextureDataSize);
+
+    OutTexture->GetPlatformData()->Mips[0].BulkData.Unlock();
+
+    OutTexture->UpdateResource();
+
+    return OutTexture;
+}
+
+void FChannelMixerUtils::ForceTextureCompilation(UTexture2D* Texture)
+{
+    FTextureCompilingManager::Get().FinishCompilation({ Texture });
+    Texture->SetForceMipLevelsToBeResident(30.f);
+    Texture->WaitForStreaming(true);
+}
+#pragma endregion
+
+

@@ -14,24 +14,49 @@
 #include "Misc/Paths.h"
 #include "Logging/LogMacros.h"
 #include "LevelEditor.h"
+#include "Engine/Texture2D.h"
+
 /**
- * Utility functions for updating the preview texture, building package paths,
- * and handling import/export functionality.
+ * Utility functions for updating the preview texture and handling import/export functionality.
  */
 class FChannelMixerUtils
 {
 public:
-    static void UpdatePreviewTexture(FChannelMixer* Mixer);
-    static FString BuildPackagePath(FChannelMixer* Mixer);
 
-    static FReply ExportTexture(FChannelMixer* Mixer);
+    // Channel mixer specific functions
+
+    static void UpdatePreviewTexture(FChannelMixer* Mixer);
+
     static FReply ImportTextureFromCB(FChannelMixer* Mixer, const FString& ChannelName, TSharedPtr<class SImage>& ChannelImage, UTexture2D** ChannelTexture);
 
-    static int32 ResFinder(FString SelectedOption);
-    static FReply RestoreSlotDefaultTexture(const FString& ChannelName, FChannelMixer* Mixer);
-
+    static FReply RestoreSlotDefaultTexture(const FString& ChannelName, TSharedPtr<SImage> SlateImage, UTexture2D* Texture, FChannelMixer* Mixer);
     static void CreateAndSetPreviewBrush(UTexture2D* NewTexture, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture);
     static void SetTextureParameterValue(const FString& ChannelName, UTexture2D** ChannelTexture, FChannelMixer* Mixer);
+    static FReply ExportTexture(FChannelMixer* Mixer);
+
+    // Channel mixer utility functions
+
+    static int32 ResFinder(FString SelectedOption);
+
+
+    // Usefull functions
+
+    static UTexture2D* CreateMaskFromGrayscales(
+        UTexture2D* RedChannel,
+        UTexture2D* GreenChannel,
+        UTexture2D* BlueChannel,
+        UTexture2D* AlphaChannel,
+        const int32& TargetResolution);
+
+    static bool SaveTextureToAsset(UTexture2D* Texture, const FString& SavePath);
+
+    static UTexture2D* CreateTextureFromRT(UTextureRenderTarget2D* RenderTarget);
+
+
+    // General utility functions
+
+    static void ForceTextureCompilation(UTexture2D* Texture);
+
     
 
 };

@@ -37,10 +37,10 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
         [
             SNew(SUniformGridPanel)
                 .SlotPadding(FMargin(5))
-                + SUniformGridPanel::Slot(0, 0)[CreateChannelWidget("Red", Mixer->RedChannelImage, &Mixer->RedTexture, Mixer)]
-                + SUniformGridPanel::Slot(1, 0)[CreateChannelWidget("Green", Mixer->GreenChannelImage, &Mixer->GreenTexture, Mixer)]
-                + SUniformGridPanel::Slot(2, 0)[CreateChannelWidget("Blue", Mixer->BlueChannelImage, &Mixer->BlueTexture, Mixer)]
-                + SUniformGridPanel::Slot(3, 0)[CreateChannelWidget("Alpha", Mixer->AlphaChannelImage, &Mixer->AlphaTexture, Mixer)]
+                + SUniformGridPanel::Slot(0, 0)[CreateChannelWidget("Red", Mixer->RedChannelSImage, &Mixer->RedTexture, Mixer)]
+                + SUniformGridPanel::Slot(1, 0)[CreateChannelWidget("Green", Mixer->GreenChannelSImage, &Mixer->GreenTexture, Mixer)]
+                + SUniformGridPanel::Slot(2, 0)[CreateChannelWidget("Blue", Mixer->BlueChannelSImage, &Mixer->BlueTexture, Mixer)]
+                + SUniformGridPanel::Slot(3, 0)[CreateChannelWidget("Alpha", Mixer->AlphaChannelSImage, &Mixer->AlphaTexture, Mixer)]
         ]
         // Preview image area.
         + SVerticalBox::Slot()
@@ -56,7 +56,7 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
                         .WidthOverride_Lambda([]() -> float {return FindDesiredSizeKeepRatio(); })
                         .HeightOverride_Lambda([]() -> float {return FindDesiredSizeKeepRatio(); })
                         [
-                            SAssignNew(Mixer->PreviewImage, SImage)
+                            SAssignNew(Mixer->PreviewSImage, SImage)
                         ]
                 ]
         ]
@@ -137,9 +137,9 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                 [
                     SNew(SButton)
                         .ToolTipText(FText::FromString(TEXT("Reset to default")))
-                        .OnClicked_Lambda([ChannelName, Mixer]() -> FReply
+                        .OnClicked_Lambda([ChannelName, &ChannelImage, ChannelTexture, Mixer]() -> FReply
                             {
-                                return FChannelMixerUtils::RestoreSlotDefaultTexture(ChannelName, Mixer);
+                                return FChannelMixerUtils::RestoreSlotDefaultTexture(ChannelName, ChannelImage, *ChannelTexture, Mixer);
                             })
                         [
                             SNew(SImage).Image(FAppStyle::GetBrush("GenericCommands.Undo"))

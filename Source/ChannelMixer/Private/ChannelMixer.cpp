@@ -22,20 +22,18 @@ void FChannelMixer::StartupModule()
 
 void FChannelMixer::ShutdownModule()
 {
-    if (ToolbarExtender.IsValid())
-    {
-        FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-        LevelEditorModule.GetMenuExtensibilityManager()->RemoveExtender(ToolbarExtender);
-    }
+
+    FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 
     ChannelMixerStyle::ShutDown();
 }
 
 void FChannelMixer::InitToolsMenuExtension()
 {
-    ToolbarExtender = MakeShareable(new FExtender);
 
-    ToolbarExtender->AddMenuExtension(
+    TSharedRef<FExtender> MenuExtender(new FExtender());
+
+    MenuExtender->AddMenuExtension(
         "Tools",
         EExtensionHook::Before,
         nullptr,
@@ -43,11 +41,12 @@ void FChannelMixer::InitToolsMenuExtension()
     );
 
     FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-    LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(ToolbarExtender);
+    LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 }
 
 void FChannelMixer::AddToolsMenuEntry(FMenuBuilder& MenuBuilder)
 {
+
     MenuBuilder.AddMenuEntry(
         FText::FromString(TEXT("Texture Mixer")),
         FText::FromString(TEXT("Open the texture mixer window")),

@@ -20,43 +20,46 @@ public:
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
 
-    FString GetExportPath() const { return ExportPath; }
-    FString GetTexturePrefix() const { return TexturePrefix; }
-    FString GetTextureName() const { return TextureName; }
-    FString GetTextureSuffix() const { return TextureSuffix; }
-    int32 GetTextureResolution()const { return TextureResolution; }
+    // State images
+    TSharedPtr<SImage> RedChannelSImage;
+    TSharedPtr<SImage> GreenChannelSImage;
+    TSharedPtr<SImage> BlueChannelSImage;
+    TSharedPtr<SImage> AlphaChannelSImage;
+    TSharedPtr<SImage> PreviewSImage;
 
-    // State variables shared with UI & utils.
-    TSharedPtr<SImage> RedChannelImage;
-    TSharedPtr<SImage> GreenChannelImage;
-    TSharedPtr<SImage> BlueChannelImage;
-    TSharedPtr<SImage> AlphaChannelImage;
-    TSharedPtr<SImage> PreviewImage;
-
-    UTextureRenderTarget2D* CombinedTexture;
-
-    UTexture2D* PreviewTexture;
+    // Editor textures references
     UTexture2D* RedTexture;
     UTexture2D* GreenTexture;
     UTexture2D* BlueTexture;
     UTexture2D* AlphaTexture;
+    UTexture2D* PreviewTexture;
 
-    UMaterialInstanceDynamic* BlendMaterial;
+    // Global resources used for the final mask preview
+    UTextureRenderTarget2D* CombinedTexture;
     TSharedPtr<FSlateBrush> PreviewBrush;
+    UMaterialInstanceDynamic* BlendMaterial;
 
+    // Final mask package settings
     FString TexturePrefix;
     FString TextureName = TEXT("GeneratedTexture");
     FString TextureSuffix;
     FString ExportPath = TEXT("GeneratedMasks");
     int32 TextureResolution = 512;
 
+    FString BuildPackagePath()
+    {
+
+        FString tempPrefix = TexturePrefix.IsEmpty() ? TEXT("") : FString::Printf(TEXT("%s_"), *TexturePrefix);
+        FString tempName = TextureName.IsEmpty() ? TEXT("GeneratedMask") : TextureName;
+        FString tempSuffix = TextureSuffix.IsEmpty() ? TEXT("") : FString::Printf(TEXT("_%s"), *TextureSuffix);
+        FString AssetName = FString::Printf(TEXT("%s%s%s"), *tempPrefix, *tempName, *tempSuffix);
+        FString PackageName = FString::Printf(TEXT("/Game/%s/%s"), *ExportPath, *AssetName);
+        return PackageName;
+    }
 
 private:
     void InitToolsMenuExtension();
     void AddToolsMenuEntry(FMenuBuilder& MenuBuilder);
     void OpenTextureMixerWindow();
 
-    const FString PluginContentDir;
-
-    TSharedPtr<FExtender> ToolbarExtender;
 };
