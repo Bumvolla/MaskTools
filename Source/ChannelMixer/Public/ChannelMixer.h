@@ -8,6 +8,7 @@
 #include "Modules/ModuleManager.h"
 #include "Interfaces/IPluginManager.h"
 #include "Framework/MultiBox/MultiBoxExtender.h"
+#include "EnchancedEditorLogging/Public/EnchancedNotifications.h"
 
 /**
  * Main module class that holds state and initializes the texture mixer.
@@ -34,6 +35,8 @@ public:
     UTexture2D* AlphaTexture;
     UTexture2D* PreviewTexture;
 
+    UTexture2D* FallbackTexture;
+
     // Global resources used for the final mask preview
     UTextureRenderTarget2D* CombinedTexture;
     TSharedPtr<FSlateBrush> PreviewBrush;
@@ -46,6 +49,20 @@ public:
     FString ExportPath = TEXT("GeneratedMasks");
     int32 TextureResolution = 512;
 
+    void UpdatePreviewTexture();
+
+    FReply ExportTexture();
+
+    FReply RestoreSlotDefaultTexture(const FString& ChannelName, TSharedPtr<SImage> SlateImage, UTexture2D* Texture);
+
+    FReply ImportTextureFromCB(const FString& ChannelName, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture);
+
+
+private:
+    void InitToolsMenuExtension();
+    void AddToolsMenuEntry(FMenuBuilder& MenuBuilder);
+    void OpenTextureMixerWindow();
+
     FString BuildPackagePath()
     {
 
@@ -57,9 +74,6 @@ public:
         return PackageName;
     }
 
-private:
-    void InitToolsMenuExtension();
-    void AddToolsMenuEntry(FMenuBuilder& MenuBuilder);
-    void OpenTextureMixerWindow();
-
+    void CreateAndSetPreviewBrush(UTexture2D* NewTexture, UTexture2D** ChannelTexture, TSharedPtr<SImage>& ChannelImage);
+    void SetTextureParameterValue(const FString& ChannelName, UTexture2D* NewTexture);
 };

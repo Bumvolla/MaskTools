@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Sora Mas
+// All rights reserved.
+
 #include "ChannelMixerUI.h"
 #include "ChannelMixer.h"
 #include "ChannelMixerUtils.h"
@@ -86,7 +89,7 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
                 .Text(FText::FromString(TEXT("Export")))
                 .OnClicked_Lambda([Mixer]() -> FReply
                 {
-                    return FChannelMixerUtils::ExportTexture(Mixer);
+                    return Mixer->ExportTexture();
                 })
         ];
 
@@ -94,16 +97,13 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
 
 TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelName, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture, FChannelMixer* Mixer)
 {
-    // Create the image widget.
     ChannelImage = SNew(SImage);
     return SNew(SVerticalBox)
-        // Label for the channel.
         + SVerticalBox::Slot()
         .AutoHeight()
         [
             SNew(STextBlock).Text(FText::FromString(ChannelName + " Channel"))
         ]
-        // Box to display the channel image.
         + SVerticalBox::Slot()
         .VAlign(VAlign_Center)
         .HAlign(HAlign_Center)
@@ -117,7 +117,6 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                 ]
         ]
 
-        // Import button that calls the utility function.
         + SVerticalBox::Slot()
         .AutoHeight()
         [
@@ -128,7 +127,7 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                         .Text(FText::FromString(TEXT("Import")))
                         .OnClicked_Lambda([ChannelName, &ChannelImage, ChannelTexture, Mixer]() -> FReply
                         {
-                            return FChannelMixerUtils::ImportTextureFromCB(Mixer, ChannelName, ChannelImage, ChannelTexture);
+                            return Mixer->ImportTextureFromCB(ChannelName, ChannelImage, ChannelTexture);
                         })
 
                 ]
@@ -139,7 +138,7 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                         .ToolTipText(FText::FromString(TEXT("Reset to default")))
                         .OnClicked_Lambda([ChannelName, &ChannelImage, ChannelTexture, Mixer]() -> FReply
                             {
-                                return FChannelMixerUtils::RestoreSlotDefaultTexture(ChannelName, ChannelImage, *ChannelTexture, Mixer);
+                                return Mixer->RestoreSlotDefaultTexture(ChannelName, ChannelImage, *ChannelTexture);
                             })
                         [
                             SNew(SImage).Image(FAppStyle::GetBrush("GenericCommands.Undo"))
@@ -258,8 +257,16 @@ void STexResComboBox::OnSelectionChanged(TSharedPtr<FString> NewSelection, ESele
     }
 
     SelectedOption = NewSelection;
-    Mixer->TextureResolution = FChannelMixerUtils::ResFinder(*NewSelection.Get());
-    FChannelMixerUtils::UpdatePreviewTexture(Mixer);
+    int32 newSize = FChannelMixerUtils::ResFinder(*NewSelection.Get());
+    Mixer->TextureResolution = newSize;
+
+    UWorld* World = GEditor->GetEditorWorldContext().World();
+    auto NewRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, newSize, newSize);
+
+    Mixer->CombinedTexture = NewRT;
+    Mixer->PreviewBrush->SetResourceObject(NewRT);
+
+    Mixer->UpdatePreviewTexture();
 }
 
 TSharedRef<SWidget> STexResComboBox::MakeWidgetForOption(TSharedPtr<FString> InOption)

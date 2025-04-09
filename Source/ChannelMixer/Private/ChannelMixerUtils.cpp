@@ -1,3 +1,5 @@
+// Copyright (c) 2025 Sora Mas
+// All rights reserved.
 #include "ChannelMixerUtils.h"
 #include "ChannelMixer.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -7,98 +9,32 @@
 #include "Widgets/Images/SImage.h"
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
-#include "Framework/Application/SlateApplication.h"
-#include "Misc/Paths.h"
-#include "Logging/LogMacros.h"
-#include "LevelEditor.h"
-#include "EnchancedEditorLogging/Public/EnchancedNotifications.h"
+
 #include "AssetRegistry/AssetRegistryModule.h"
 
-
-
 #include "TextureCompiler.h"
+#include "UObject/Package.h"
+#include "UObject/SavePackage.h"
 
-
-void FChannelMixerUtils::UpdatePreviewTexture(FChannelMixer* Mixer)
-{
-    if (!Mixer) return;
-
-    UWorld* World = GEditor->GetEditorWorldContext().World();
-
-    Mixer->CombinedTexture = UKismetRenderingLibrary::CreateRenderTarget2D(World, Mixer->TextureResolution, Mixer->TextureResolution);
-    Mixer->CombinedTexture->AddToRoot();
-
-    UKismetRenderingLibrary::ClearRenderTarget2D(World, Mixer->CombinedTexture, FLinearColor(0, 0, 0, 255));
-
-    UKismetRenderingLibrary::DrawMaterialToRenderTarget(World, Mixer->CombinedTexture, Mixer->BlendMaterial);
-
-    if (!Mixer->PreviewBrush.IsValid())
-    {
-        Mixer->PreviewBrush = MakeShared<FSlateBrush>();
-    }
-
-    Mixer->PreviewBrush->SetResourceObject(Mixer->CombinedTexture);
-    if (Mixer->PreviewSImage.IsValid())
-    {
-        Mixer->PreviewSImage->SetImage(Mixer->PreviewBrush.Get());
-    }
-
-    FSlateApplication::Get().Tick();
-}
-
-FReply FChannelMixerUtils::ImportTextureFromCB(FChannelMixer* Mixer, const FString& ChannelName, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture)
+UTexture2D* FChannelMixerUtils::CreateFallbackTexture()
 {
 
-    FContentBrowserModule* ContentBrowserModule = &FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
-    TArray<FAssetData> SelectedAssets;
-    ContentBrowserModule->Get().GetSelectedAssets(SelectedAssets);
+    UTexture2D* Texture = UTexture2D::CreateTransient(8, 8, PF_G8);
 
-    if (SelectedAssets.Num() == 1)
-    {
-        UObject* SelectedObject = SelectedAssets[0].GetAsset();
-        if (UTexture2D* SelectedTexture = Cast<UTexture2D>(SelectedObject))
-        {
-            //This ensures texture is fully loaded before using it for the render target
-            ForceTextureCompilation(SelectedTexture);
+    Texture->MipGenSettings = TMGS_NoMipmaps;
+    Texture->CompressionSettings = TC_Grayscale;
+    Texture->SRGB = false;
 
+    FTexture2DMipMap& Mip = Texture->GetPlatformData()->Mips[0];
+    void* Data = Mip.BulkData.Lock(LOCK_READ_WRITE);
 
-            CreateAndSetPreviewBrush(SelectedTexture, ChannelImage, ChannelTexture);
-            SetTextureParameterValue(ChannelName, ChannelTexture, Mixer);
-        }
-        else
-        {
-            UEnchancedNotifications::LaunchNotification(TEXT("Please select a texture to import"));
-        }
-    }
-    else
-    {
-        UEnchancedNotifications::LaunchNotification(TEXT("Please select a texture to import"));
-    }
+    FMemory::Memset(Data, 0, 8 * 8);
 
-    UpdatePreviewTexture(Mixer);
-    return FReply::Handled();
-}
+    Mip.BulkData.Unlock();
+    Texture->AddToRoot();
+    Texture->UpdateResource();
 
-FReply FChannelMixerUtils::ExportTexture(FChannelMixer* Mixer)
-{
-    if (!Mixer || !Mixer->CombinedTexture)
-    {
-        UE_LOG(LogTemp, Error, TEXT("ExportTexture: CombinedTexture is null"));
-        return FReply::Handled();
-    }
-
-    FString PackageName = Mixer->BuildPackagePath();
-
-    UTexture2D* ExportedTexture = UKismetRenderingLibrary::RenderTargetCreateStaticTexture2DEditorOnly(
-        Mixer->CombinedTexture,
-        PackageName,
-        TextureCompressionSettings::TC_Masks,
-        TextureMipGenSettings::TMGS_NoMipmaps
-    );
-
-    UEnchancedNotifications::OpenCBDirNotification(FString::Printf(TEXT("Successfully exported combined texture to /Content/%s"), *Mixer->ExportPath), FString::Printf(TEXT("/Game/%s"), *Mixer->ExportPath));
-
-    return FReply::Handled();
+    return Texture;
 }
 
 int32 FChannelMixerUtils::ResFinder(FString SelectedOption)
@@ -119,58 +55,25 @@ int32 FChannelMixerUtils::ResFinder(FString SelectedOption)
     return *ResMap.Find(SelectedOption);
 }
 
-FReply FChannelMixerUtils::RestoreSlotDefaultTexture(const FString& ChannelName, TSharedPtr<SImage> SlateImage, UTexture2D* Texture, FChannelMixer* Mixer)
-{
-
-    UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, TEXT("/UnrealToolsPlugin/MM/Textures/Checkers/T_Black"));;
-
-    CreateAndSetPreviewBrush(Texture, SlateImage, &Texture);
-    SetTextureParameterValue(ChannelName, &Texture, Mixer);
-
-    UpdatePreviewTexture(Mixer);
-    FSlateApplication::Get().Tick();
-
-    return FReply::Handled();
-}
-
-void FChannelMixerUtils::CreateAndSetPreviewBrush(UTexture2D* NewTexture, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture)
-{
-    FSlateBrush* NewBrush = new FSlateBrush();
-    NewBrush->SetResourceObject(NewTexture);
-    ChannelImage->SetImage(NewBrush);
-    *ChannelTexture = NewTexture;
-}
-
-void FChannelMixerUtils::SetTextureParameterValue(const FString& ChannelName, UTexture2D** ChannelTexture, FChannelMixer* Mixer)
-{
-    if (Mixer->BlendMaterial) Mixer->BlendMaterial->SetTextureParameterValue(FName(ChannelName), *ChannelTexture);
-}
-
-
-
-
-
-
-
 #pragma region General utilities
 UTexture2D* FChannelMixerUtils::CreateMaskFromGrayscales(UTexture2D* RedChannel, UTexture2D* GreenChannel, UTexture2D* BlueChannel, UTexture2D* AlphaChannel, const int32& TargetResolution)
 {
-
     UWorld* World = GEditor->GetEditorWorldContext().World();
 
     UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureMixer"));
     UMaterialInstanceDynamic* MaterialInstance = UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, BaseMaterial);
 
-    TArray<UTexture2D*> TexturesArray = { RedChannel, GreenChannel, BlueChannel, AlphaChannel };
-    for (UTexture2D* Texture : TexturesArray)
-    {
-        ForceTextureCompilation(Texture);
-    }
+    UTexture2D* FallbackTexture = CreateFallbackTexture();
 
-    MaterialInstance->SetTextureParameterValue(TEXT("Red"), RedChannel);
-    MaterialInstance->SetTextureParameterValue(TEXT("Green"), GreenChannel);
-    MaterialInstance->SetTextureParameterValue(TEXT("Blue"), BlueChannel);
-    MaterialInstance->SetTextureParameterValue(TEXT("Alpha"), AlphaChannel);
+    if (RedChannel) ForceTextureCompilation(RedChannel);
+    if (GreenChannel) ForceTextureCompilation(GreenChannel);
+    if (BlueChannel) ForceTextureCompilation(RedChannel);
+    if (AlphaChannel) ForceTextureCompilation(GreenChannel);
+
+    MaterialInstance->SetTextureParameterValue(TEXT("Red"), RedChannel ? RedChannel : FallbackTexture);
+    MaterialInstance->SetTextureParameterValue(TEXT("Green"), GreenChannel ? GreenChannel : FallbackTexture);
+    MaterialInstance->SetTextureParameterValue(TEXT("Blue"), BlueChannel ? BlueChannel : FallbackTexture);
+    MaterialInstance->SetTextureParameterValue(TEXT("Alpha"), AlphaChannel ? AlphaChannel : FallbackTexture);
     MaterialInstance->EnsureIsComplete();
 
     UTextureRenderTarget2D* tempRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, TargetResolution, TargetResolution, RTF_RGBA16f);
@@ -189,7 +92,16 @@ bool FChannelMixerUtils::SaveTextureToAsset(UTexture2D* Texture, const FString& 
     FAssetRegistryModule::AssetCreated(NewTexture);
 
     FString PackageFileName = FPackageName::LongPackageNameToFilename(SavePath, FPackageName::GetAssetPackageExtension());
-    return UPackage::SavePackage(Package, NewTexture, EObjectFlags::RF_Public | RF_Standalone, *PackageFileName);
+
+    FSavePackageArgs PackageArgs;
+    PackageArgs.TopLevelFlags = RF_Public | RF_Standalone;
+    PackageArgs.SaveFlags = SAVE_NoError;
+    PackageArgs.Error = GLog;
+    PackageArgs.bForceByteSwapping = false;
+    PackageArgs.bWarnOfLongFilename = true;
+    PackageArgs.bSlowTask = true;
+
+    return UPackage::SavePackage(Package, NewTexture, *PackageFileName, PackageArgs);
 }
 
 UTexture2D* FChannelMixerUtils::CreateTextureFromRT(UTextureRenderTarget2D* RenderTarget)
@@ -216,6 +128,7 @@ UTexture2D* FChannelMixerUtils::CreateTextureFromRT(UTextureRenderTarget2D* Rend
     OutTexture->UpdateResource();
 
     return OutTexture;
+
 }
 
 void FChannelMixerUtils::ForceTextureCompilation(UTexture2D* Texture)
@@ -226,4 +139,7 @@ void FChannelMixerUtils::ForceTextureCompilation(UTexture2D* Texture)
 }
 #pragma endregion
 
-
+void UChannelMixerBPLib::CreateMaskFromGrayscales(UTexture2D*& ResultTexture, UTexture2D* RedChannel, UTexture2D* GreenChannel, UTexture2D* BlueChannel, UTexture2D* AlphaChannel, const int32& TargetResolution)
+{
+    ResultTexture = FChannelMixerUtils::CreateMaskFromGrayscales(RedChannel, GreenChannel, BlueChannel, AlphaChannel, TargetResolution);
+}
