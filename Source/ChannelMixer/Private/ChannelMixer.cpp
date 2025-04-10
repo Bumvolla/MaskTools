@@ -14,6 +14,7 @@
 #include "ChannelMixerStyle.h"
 #include "Kismet/KismetMaterialLibrary.h"
 
+
 #define LOCTEXT_NAMESPACE "FChannelMixer"
 
 #pragma region Module
@@ -75,6 +76,20 @@ void FChannelMixer::OpenTextureMixerWindow()
     CombinedTexture = UKismetRenderingLibrary::CreateRenderTarget2D(World, TextureResolution, TextureResolution);
     PreviewBrush->SetResourceObject(CombinedTexture);
     FallbackTexture = FChannelMixerUtils::CreateFallbackTexture();
+
+    //const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+    //ExportPath = Config->DefaultMaskSavePath.Path;
+
+}
+FString FChannelMixer::BuildPackagePath()
+{
+
+    FString tempPrefix = TexturePrefix.IsEmpty() ? TEXT("") : FString::Printf(TEXT("%s_"), *TexturePrefix);
+    FString tempName = TextureName.IsEmpty() ? TEXT("GeneratedMask") : TextureName;
+    FString tempSuffix = TextureSuffix.IsEmpty() ? TEXT("") : FString::Printf(TEXT("_%s"), *TextureSuffix);
+    FString AssetName = FString::Printf(TEXT("%s%s%s"), *tempPrefix, *tempName, *tempSuffix);
+    FString PackageName = FString::Printf(TEXT("/Game/%s/%s"), *ExportPath, *AssetName);
+    return PackageName;
 
 }
 #pragma endregion

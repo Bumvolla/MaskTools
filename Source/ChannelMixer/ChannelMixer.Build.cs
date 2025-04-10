@@ -39,6 +39,7 @@ public class ChannelMixer : ModuleRules
                 "ToolMenus",
                 "UnrealEd",
                 "Projects",
+                "MaskTools",
 
 
 

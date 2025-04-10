@@ -10,6 +10,8 @@
 #include "Framework/MultiBox/MultiBoxExtender.h"
 #include "EnchancedEditorLogging/Public/EnchancedNotifications.h"
 
+#include "MaskTools/Public/MaskToolsConfig.h"
+
 /**
  * Main module class that holds state and initializes the texture mixer.
  */
@@ -63,16 +65,7 @@ private:
     void AddToolsMenuEntry(FMenuBuilder& MenuBuilder);
     void OpenTextureMixerWindow();
 
-    FString BuildPackagePath()
-    {
-
-        FString tempPrefix = TexturePrefix.IsEmpty() ? TEXT("") : FString::Printf(TEXT("%s_"), *TexturePrefix);
-        FString tempName = TextureName.IsEmpty() ? TEXT("GeneratedMask") : TextureName;
-        FString tempSuffix = TextureSuffix.IsEmpty() ? TEXT("") : FString::Printf(TEXT("_%s"), *TextureSuffix);
-        FString AssetName = FString::Printf(TEXT("%s%s%s"), *tempPrefix, *tempName, *tempSuffix);
-        FString PackageName = FString::Printf(TEXT("/Game/%s/%s"), *ExportPath, *AssetName);
-        return PackageName;
-    }
+    FString BuildPackagePath();
 
     void CreateAndSetPreviewBrush(UTexture2D* NewTexture, UTexture2D** ChannelTexture, TSharedPtr<SImage>& ChannelImage);
     void SetTextureParameterValue(const FString& ChannelName, UTexture2D* NewTexture);

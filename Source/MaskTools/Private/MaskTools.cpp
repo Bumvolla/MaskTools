@@ -1,18 +1,39 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MaskTools.h"
+#include "MaskToolsConfig.h"
+#include "ISettingsModule.h"
 
 #define LOCTEXT_NAMESPACE "FMaskToolsModule"
 
 void FMaskToolsModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+    RegisterSettings();
 }
 
 void FMaskToolsModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+    UnregisterSettings();
+}
+
+void FMaskToolsModule::RegisterSettings()
+{
+    if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
+    {
+        SettingsModule->RegisterSettings("Project", "Plugins", "Mask Tools",
+            LOCTEXT("Mask Tools plugin configuration", "Mask Tools"),
+            LOCTEXT("Settings Description", "Mask Tools configurations"),
+            GetMutableDefault<UMaskToolsConfig>()
+        );
+    }
+}
+
+void FMaskToolsModule::UnregisterSettings()
+{
+    if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
+    {
+        SettingsModule->UnregisterSettings("Project", "Plugins", "Mask Tools");
+    }
 }
 
 #undef LOCTEXT_NAMESPACE
