@@ -43,7 +43,7 @@ void FChannelMixer::InitToolsMenuExtension()
 
     MenuExtender->AddMenuExtension(
         "Tools",
-        EExtensionHook::Before,
+        EExtensionHook::After,
         nullptr,
         FMenuExtensionDelegate::CreateRaw(this, &FChannelMixer::AddToolsMenuEntry)
     );
