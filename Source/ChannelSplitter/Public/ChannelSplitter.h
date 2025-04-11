@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+#include <Kismet/KismetMaterialLibrary.h>
+#include <Kismet/KismetRenderingLibrary.h>
 
 class FChannelSplitter : public IModuleInterface
 {
@@ -21,5 +23,10 @@ private:
 
 	TArray<FAssetData> AssetsSelected;
 	const TArray<FString> SuffixArray = { TEXT("_R"), TEXT("_G") ,TEXT("_B"), TEXT("_A") };
+
+	/*
+	* Returns true if grayscale material is completely black or white.
+	*/
+	bool IsChannelEmpty(UMaterialInstanceDynamic* Material);
 	
 };

@@ -50,7 +50,7 @@ void UEnchancedNotifications::OpenCBDirNotification(const FString& Title, const 
     Info.bUseThrobber = false;
     Info.bUseSuccessFailIcons = false;
 
-    // Change the notification icon
+    //@todo: Change the notification icon
     Info.Image = FCoreStyle::Get().GetBrush(TEXT("Icons.SuccessWithColor"));
 
     NotificationPtr = FSlateNotificationManager::Get().AddNotification(Info);

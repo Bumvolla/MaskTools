@@ -69,9 +69,9 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
         .AutoHeight()
         [
             SNew(SHorizontalBox)
-                + SHorizontalBox::Slot()[CreateNameConfigWidget(TEXT("Texture Prefix"), TEXT("Prefix the exported texture will use"), TEXT("T"), Mixer->TexturePrefix, Mixer)]
-                + SHorizontalBox::Slot()[CreateNameConfigWidget(TEXT("Texture Name"), TEXT("Name the exported texture will use"), TEXT("GeneratedMask"), Mixer->TextureName, Mixer)]
-                + SHorizontalBox::Slot()[CreateNameConfigWidget(TEXT("Texture Suffix"), TEXT("Suffix the exported texture will use"), TEXT("Mask"), Mixer->TextureSuffix, Mixer)]
+                + SHorizontalBox::Slot()[CreateNameConfigWidget(TEXT("Texture Prefix"), TEXT("Prefix the exported texture will use"), Mixer->PrefixHintText, Mixer->TexturePrefix, Mixer)]
+                + SHorizontalBox::Slot()[CreateNameConfigWidget(TEXT("Texture Name"), TEXT("Name the exported texture will use"), Mixer->NameHintText, Mixer->TextureName, Mixer)]
+                + SHorizontalBox::Slot()[CreateNameConfigWidget(TEXT("Texture Suffix"), TEXT("Suffix the exported texture will use"), Mixer->SuffixHintText, Mixer->TextureSuffix, Mixer)]
         ]
         + SVerticalBox::Slot()
         .AutoHeight()
@@ -231,8 +231,9 @@ void STexResComboBox::Construct(const FArguments& InArgs)
     ComboBoxOptions.Add(MakeShared<FString>(TEXT("4096")));
     ComboBoxOptions.Add(MakeShared<FString>(TEXT("8192")));
 
-    //Defaults to 512
-    SelectedOption = ComboBoxOptions[4];
+    const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+    int32 EnumIndex = StaticEnum<EMaskResolutions>()->GetIndexByValue(static_cast<int64>(Config->DefaultMaskResolution));
+    SelectedOption = ComboBoxOptions[EnumIndex];
 
     ChildSlot
         [

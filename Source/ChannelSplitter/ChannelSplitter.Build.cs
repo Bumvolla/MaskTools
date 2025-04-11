@@ -39,6 +39,7 @@ public class ChannelSplitter : ModuleRules
                 "ToolMenus",
                 "UnrealEd",
                 "Projects",
+                "MaskTools",
 
 
 

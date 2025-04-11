@@ -14,6 +14,9 @@
 #include "ChannelMixerStyle.h"
 #include "Kismet/KismetMaterialLibrary.h"
 
+#include "MaskTools/Public/MaskToolsConfig.h"
+
+
 #define LOCTEXT_NAMESPACE "FChannelMixer"
 
 #pragma region Module
@@ -65,9 +68,22 @@ void FChannelMixer::AddToolsMenuEntry(FMenuBuilder& MenuBuilder)
 
 void FChannelMixer::OpenTextureMixerWindow()
 {
-    FChannelMixerUI::ShowTextureMixerWindow(this);
 
+    // Retrieve config from project settings
+    const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
 
+    ExportPath = Config->DefaultMaskSavePath.Path;
+    TextureName = Config->DefaultMaskName;
+
+    PrefixHintText = Config->DefaultMaskPrefix;
+    NameHintText = TextureName;
+    SuffixHintText = Config->DefaultMaskSuffix;
+
+    const UEnum* EnumPtr = StaticEnum<EMaskResolutions>();
+    FText defaultResString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(Config->DefaultMaskResolution));
+    TextureResolution = FChannelMixerUtils::ResFinder(defaultResString.ToString());
+
+    // Create default values
     UWorld* World = GEditor->GetEditorWorldContext().World();
     UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureMixer"));
     BlendMaterial = UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, BaseMaterial);
@@ -75,6 +91,40 @@ void FChannelMixer::OpenTextureMixerWindow()
     CombinedTexture = UKismetRenderingLibrary::CreateRenderTarget2D(World, TextureResolution, TextureResolution);
     PreviewBrush->SetResourceObject(CombinedTexture);
     FallbackTexture = FChannelMixerUtils::CreateFallbackTexture();
+
+    // Show main window
+    FChannelMixerUI::ShowTextureMixerWindow(this);
+
+}
+
+FString FChannelMixer::BuildPackagePath()
+{
+
+    const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+
+    FString tempPrefix, tempName, tempSuffix;
+
+    if (TexturePrefix.IsEmpty())
+    {
+        if (Config->bDefaultAddPrefix) tempPrefix = FString::Printf(TEXT("%s_"), *Config->DefaultMaskPrefix);
+        else tempPrefix = TEXT("");
+    }
+    else 
+        tempPrefix = FString::Printf(TEXT("%s_"), *TexturePrefix);
+
+    TextureName.IsEmpty() ? Config->DefaultMaskName : TextureName;
+
+    if (TextureSuffix.IsEmpty())
+    {
+        if (Config->bDefaultAddSuffix) tempSuffix = FString::Printf(TEXT("%s_"), *Config->DefaultMaskSuffix);
+        else tempSuffix = TEXT("");
+    }
+    else 
+        tempSuffix = FString::Printf(TEXT("%s_"), *TextureSuffix);
+
+    FString AssetName = FString::Printf(TEXT("%s%s%s"), *tempPrefix, *tempName, *tempSuffix);
+    FString PackageName = FString::Printf(TEXT("/Game/%s/%s"), *ExportPath, *AssetName);
+    return PackageName;
 
 }
 #pragma endregion
@@ -145,6 +195,7 @@ FReply FChannelMixer::ExportTexture()
 
     return FReply::Handled();
 }
+
 FReply FChannelMixer::RestoreSlotDefaultTexture(const FString& ChannelName, TSharedPtr<SImage> SlateImage, UTexture2D* Texture)
 {
 
