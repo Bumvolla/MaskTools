@@ -13,6 +13,7 @@
 #include "ChannelSpliterStyle.h"
 #include "MaskTools/Public/MaskToolsConfig.h"
 
+#include "Misc/EngineVersionComparison.h"
 
 #define LOCTEXT_NAMESPACE "FChannelSplitter"
 
@@ -107,10 +108,13 @@ void FChannelSplitter::SplitTextures()
         const TEnumAsByte<TextureMipGenSettings> MipGenSettings = Texture->MipGenSettings;
         const int32 LodBias = Texture->LODBias;
         const int32 MaxTextureSize = Texture->MaxTextureSize;
-        const bool bOodlePreserveExtremes = Texture->bOodlePreserveExtremes;
         const bool bPreserveBorders = Texture->bPreserveBorder;
         const TEnumAsByte<TextureCookPlatformTilingSettings> CookPlatformTilingSettings = Texture->CookPlatformTilingSettings;
         const uint8 NeverStream = Texture->NeverStream;
+
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+        const bool bOodlePreserveExtremes = Texture->bOodlePreserveExtremes;
+#endif // UE_VERSION_NEWER_THAN(5, 4, 0)
 
         // Iterator for the suffixes
         int i = 0;
@@ -157,10 +161,12 @@ void FChannelSplitter::SplitTextures()
             // Paste original texture values
             ExportedTexture->LODBias = LodBias;
             ExportedTexture->MaxTextureSize = MaxTextureSize;
-            ExportedTexture->bOodlePreserveExtremes = bOodlePreserveExtremes;
             ExportedTexture->bPreserveBorder = bPreserveBorders;
             ExportedTexture-> CookPlatformTilingSettings = CookPlatformTilingSettings;
             ExportedTexture->NeverStream = NeverStream;
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+            ExportedTexture->bOodlePreserveExtremes = bOodlePreserveExtremes;
+#endif // UE_VERSION_NEWER_THAN(5, 4, 0)
 
             // Notify the editor changes finished
             ExportedTexture->PostEditChange();
