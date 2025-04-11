@@ -8,11 +8,10 @@
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
 
-#include <Kismet/KismetMaterialLibrary.h>
-#include <Kismet/KismetRenderingLibrary.h>
 #include "TextureCompiler.h"
 
 #include "ChannelSpliterStyle.h"
+#include "MaskTools/Public/MaskToolsConfig.h"
 
 
 #define LOCTEXT_NAMESPACE "FChannelSplitter"
@@ -123,7 +122,7 @@ void FChannelSplitter::SplitTextures()
             Material->SetTextureParameterValue(TEXT("Texture"), Texture);
             Material->EnsureIsComplete();
 
-            // I'm using GetPathName because it returns editor relative path
+            // I'm using GetPathName because it returns editor content folder relative path
             // It must be cleaned afterwards
             FString PathName = Texture->GetPathName();
             int32 DotIndex = 0;
@@ -132,6 +131,14 @@ void FChannelSplitter::SplitTextures()
             const FString PackageName = FString::Printf(TEXT("%s%s"), *PathName, *SuffixArray[i]);
 
             UTextureRenderTarget2D* tempRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, OgTexResX, OgTexResY, RTF_R16f);
+
+            const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+            
+            if (Config->bDiscardEmptyChannels)
+            {
+
+            }
+
             UKismetRenderingLibrary::DrawMaterialToRenderTarget(World, tempRT , Material);
 
             UTexture2D* ExportedTexture = UKismetRenderingLibrary::RenderTargetCreateStaticTexture2DEditorOnly(
@@ -155,6 +162,11 @@ void FChannelSplitter::SplitTextures()
 
     }
 
+}
+
+bool FChannelSplitter::IsChannelEmpty(UTextureRenderTarget2D* RenderTarget)
+{
+    return false;
 }
 
 #undef LOCTEXT_NAMESPACE

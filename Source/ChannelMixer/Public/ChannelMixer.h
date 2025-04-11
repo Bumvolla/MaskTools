@@ -51,6 +51,11 @@ public:
     FString ExportPath = TEXT("GeneratedMasks");
     int32 TextureResolution = 512;
 
+    // UI data
+    FString PrefixHintText = TEXT("T");
+    FString NameHintText = TEXT("GeneratedMask");
+    FString SuffixHintText = TEXT("Mask");
+
     void UpdatePreviewTexture();
 
     FReply ExportTexture();

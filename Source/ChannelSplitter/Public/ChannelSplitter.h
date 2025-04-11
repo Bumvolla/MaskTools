@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+#include <Kismet/KismetMaterialLibrary.h>
+#include <Kismet/KismetRenderingLibrary.h>
 
 class FChannelSplitter : public IModuleInterface
 {
@@ -21,5 +23,7 @@ private:
 
 	TArray<FAssetData> AssetsSelected;
 	const TArray<FString> SuffixArray = { TEXT("_R"), TEXT("_G") ,TEXT("_B"), TEXT("_A") };
+
+	bool IsChannelEmpty(UTextureRenderTarget2D* RenderTarget);
 	
 };
