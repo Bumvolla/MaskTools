@@ -10,5 +10,5 @@ UMaskToolsConfig::UMaskToolsConfig()
 	DefaultMaskSuffix = TEXT("Mask");
 	DefaultMaskSavePath = FDirectoryPath("GeneratedThumbnails");
 	DefaultMaskResolution = EMaskResolutions::FiveHundredTwelve;
-	bDiscardEmptyChannels = false;
+	bDiscardEmptyChannels = true;
 }

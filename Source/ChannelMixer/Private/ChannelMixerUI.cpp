@@ -231,8 +231,9 @@ void STexResComboBox::Construct(const FArguments& InArgs)
     ComboBoxOptions.Add(MakeShared<FString>(TEXT("4096")));
     ComboBoxOptions.Add(MakeShared<FString>(TEXT("8192")));
 
-    //Defaults to 512
-    SelectedOption = ComboBoxOptions[4];
+    const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+    int32 EnumIndex = StaticEnum<EMaskResolutions>()->GetIndexByValue(static_cast<int64>(Config->DefaultMaskResolution));
+    SelectedOption = ComboBoxOptions[EnumIndex];
 
     ChildSlot
         [

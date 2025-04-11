@@ -24,6 +24,9 @@ private:
 	TArray<FAssetData> AssetsSelected;
 	const TArray<FString> SuffixArray = { TEXT("_R"), TEXT("_G") ,TEXT("_B"), TEXT("_A") };
 
-	bool IsChannelEmpty(UTextureRenderTarget2D* RenderTarget);
+	/*
+	* Returns true if grayscale material is completely black or white.
+	*/
+	bool IsChannelEmpty(UMaterialInstanceDynamic* Material);
 	
 };
