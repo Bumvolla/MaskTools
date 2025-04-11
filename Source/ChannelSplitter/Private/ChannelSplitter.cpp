@@ -9,6 +9,7 @@
 #include "IContentBrowserSingleton.h"
 
 #include "TextureCompiler.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 #include "ChannelSpliterStyle.h"
 #include "MaskTools/Public/MaskToolsConfig.h"
@@ -97,10 +98,11 @@ void FChannelSplitter::SplitTextures()
     for (UTexture2D* Texture : SelectedTextures)
     {
         TArray<UMaterialInstanceDynamic*> SplitMaterialsArray;
-        SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_R")), FName("Red"), EMIDCreationFlags::Transient));
-        SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_G")), FName("Green"), EMIDCreationFlags::Transient));
-        SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_B")), FName("Blue"), EMIDCreationFlags::Transient));
-        SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_A")), FName("Alpha"), EMIDCreationFlags::Transient));
+
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_R")), World, FName("Red")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_G")), World, FName("Green")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_B")), World, FName("Blue")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_A")), World, FName("Alpha")));
 
         // Copy original texture values and settings
         const int32 OgTexResX = Texture->GetImportedSize().X;
