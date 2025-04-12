@@ -8,7 +8,7 @@ UMaskToolsConfig::UMaskToolsConfig()
 	DefaultMaskPrefix = TEXT("T");
 	DefaultMaskName = TEXT("GeneratedMask");
 	DefaultMaskSuffix = TEXT("Mask");
-	DefaultMaskSavePath = FDirectoryPath("GeneratedThumbnails");
+	DefaultMaskSavePath.Path = TEXT("GeneratedThumbnails");
 	DefaultMaskResolution = EMaskResolutions::FiveHundredTwelve;
 	bDiscardEmptyChannels = true;
 }

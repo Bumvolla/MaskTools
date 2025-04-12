@@ -9,10 +9,12 @@
 #include "IContentBrowserSingleton.h"
 
 #include "TextureCompiler.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 #include "ChannelSpliterStyle.h"
 #include "MaskTools/Public/MaskToolsConfig.h"
 
+#include "Misc/EngineVersionComparison.h"
 
 #define LOCTEXT_NAMESPACE "FChannelSplitter"
 
@@ -96,10 +98,11 @@ void FChannelSplitter::SplitTextures()
     for (UTexture2D* Texture : SelectedTextures)
     {
         TArray<UMaterialInstanceDynamic*> SplitMaterialsArray;
-        SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_R")), FName("Red"), EMIDCreationFlags::Transient));
-        SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_G")), FName("Green"), EMIDCreationFlags::Transient));
-        SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_B")), FName("Blue"), EMIDCreationFlags::Transient));
-        SplitMaterialsArray.Add(UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_A")), FName("Alpha"), EMIDCreationFlags::Transient));
+
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_R")), World, FName("Red")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_G")), World, FName("Green")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_B")), World, FName("Blue")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_A")), World, FName("Alpha")));
 
         // Copy original texture values and settings
         const int32 OgTexResX = Texture->GetImportedSize().X;
@@ -107,10 +110,16 @@ void FChannelSplitter::SplitTextures()
         const TEnumAsByte<TextureMipGenSettings> MipGenSettings = Texture->MipGenSettings;
         const int32 LodBias = Texture->LODBias;
         const int32 MaxTextureSize = Texture->MaxTextureSize;
-        const bool bOodlePreserveExtremes = Texture->bOodlePreserveExtremes;
         const bool bPreserveBorders = Texture->bPreserveBorder;
-        const TEnumAsByte<TextureCookPlatformTilingSettings> CookPlatformTilingSettings = Texture->CookPlatformTilingSettings;
         const uint8 NeverStream = Texture->NeverStream;
+
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
+        const TEnumAsByte<TextureCookPlatformTilingSettings> CookPlatformTilingSettings = Texture->CookPlatformTilingSettings;
+#endif // UE_VERSION_NEWER_THAN(5, 2, 0)
+
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+        const bool bOodlePreserveExtremes = Texture->bOodlePreserveExtremes;
+#endif // UE_VERSION_NEWER_THAN(5, 4, 0)
 
         // Iterator for the suffixes
         int i = 0;
@@ -157,10 +166,16 @@ void FChannelSplitter::SplitTextures()
             // Paste original texture values
             ExportedTexture->LODBias = LodBias;
             ExportedTexture->MaxTextureSize = MaxTextureSize;
-            ExportedTexture->bOodlePreserveExtremes = bOodlePreserveExtremes;
             ExportedTexture->bPreserveBorder = bPreserveBorders;
-            ExportedTexture-> CookPlatformTilingSettings = CookPlatformTilingSettings;
             ExportedTexture->NeverStream = NeverStream;
+
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
+            ExportedTexture-> CookPlatformTilingSettings = CookPlatformTilingSettings;
+#endif // UE_VERSION_NEWER_THAN(5, 2, 0)
+
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+            ExportedTexture->bOodlePreserveExtremes = bOodlePreserveExtremes;
+#endif // UE_VERSION_NEWER_THAN(5, 4, 0)
 
             // Notify the editor changes finished
             ExportedTexture->PostEditChange();
