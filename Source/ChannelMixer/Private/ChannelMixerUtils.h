@@ -15,7 +15,7 @@
 /**
  * Utility functions.
  */
-namespace  FChannelMixerUtils
+struct  FChannelMixerUtils
 {
     // Channel mixer utility functions
 

@@ -6,7 +6,7 @@
 /**
  * Handles the Slate UI for the Texture Mixer.
  */
-namespace FChannelMixerUI
+struct FChannelMixerUI
 {
     // Opens the texture mixer window. The Mixer pointer provides access to state.
     static void ShowTextureMixerWindow(FChannelMixer* Mixer);
