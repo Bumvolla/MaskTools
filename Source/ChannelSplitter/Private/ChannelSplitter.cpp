@@ -111,8 +111,11 @@ void FChannelSplitter::SplitTextures()
         const int32 LodBias = Texture->LODBias;
         const int32 MaxTextureSize = Texture->MaxTextureSize;
         const bool bPreserveBorders = Texture->bPreserveBorder;
-        const TEnumAsByte<TextureCookPlatformTilingSettings> CookPlatformTilingSettings = Texture->CookPlatformTilingSettings;
         const uint8 NeverStream = Texture->NeverStream;
+
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
+        const TEnumAsByte<TextureCookPlatformTilingSettings> CookPlatformTilingSettings = Texture->CookPlatformTilingSettings;
+#endif // UE_VERSION_NEWER_THAN(5, 2, 0)
 
 #if UE_VERSION_NEWER_THAN(5, 4, 0)
         const bool bOodlePreserveExtremes = Texture->bOodlePreserveExtremes;
@@ -164,8 +167,12 @@ void FChannelSplitter::SplitTextures()
             ExportedTexture->LODBias = LodBias;
             ExportedTexture->MaxTextureSize = MaxTextureSize;
             ExportedTexture->bPreserveBorder = bPreserveBorders;
-            ExportedTexture-> CookPlatformTilingSettings = CookPlatformTilingSettings;
             ExportedTexture->NeverStream = NeverStream;
+
+#if UE_VERSION_NEWER_THAN(5, 2, 0)
+            ExportedTexture-> CookPlatformTilingSettings = CookPlatformTilingSettings;
+#endif // UE_VERSION_NEWER_THAN(5, 2, 0)
+
 #if UE_VERSION_NEWER_THAN(5, 4, 0)
             ExportedTexture->bOodlePreserveExtremes = bOodlePreserveExtremes;
 #endif // UE_VERSION_NEWER_THAN(5, 4, 0)
