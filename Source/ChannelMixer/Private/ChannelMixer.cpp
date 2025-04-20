@@ -75,6 +75,10 @@ void FChannelMixer::OpenTextureMixerWindow()
     ExportPath = Config->DefaultMaskSavePath.Path;
     TextureName = Config->DefaultMaskName;
 
+    TexturePrefix = Config->DefaultMaskPrefix;
+    TextureName = Config->DefaultMaskName;
+    TextureSuffix = Config->DefaultMaskSuffix;
+
     PrefixHintText = Config->DefaultMaskPrefix;
     NameHintText = TextureName;
     SuffixHintText = Config->DefaultMaskSuffix;
@@ -112,11 +116,11 @@ FString FChannelMixer::BuildPackagePath()
     else 
         tempPrefix = FString::Printf(TEXT("%s_"), *TexturePrefix);
 
-    TextureName.IsEmpty() ? Config->DefaultMaskName : TextureName;
+    tempName = TextureName.IsEmpty() ? Config->DefaultMaskName : TextureName;
 
     if (TextureSuffix.IsEmpty())
     {
-        if (Config->bDefaultAddSuffix) tempSuffix = FString::Printf(TEXT("%s_"), *Config->DefaultMaskSuffix);
+        if (Config->bDefaultAddSuffix) tempSuffix = FString::Printf(TEXT("_%s"), *Config->DefaultMaskSuffix);
         else tempSuffix = TEXT("");
     }
     else 
