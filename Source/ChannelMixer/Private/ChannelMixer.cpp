@@ -91,10 +91,13 @@ void FChannelMixer::OpenTextureMixerWindow()
     UWorld* World = GEditor->GetEditorWorldContext().World();
     UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureMixer"));
     BlendMaterial = UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, BaseMaterial);
+    BlendMaterial->AddToRoot();
     PreviewBrush = MakeShared<FSlateBrush>();
     CombinedTexture = UKismetRenderingLibrary::CreateRenderTarget2D(World, TextureResolution, TextureResolution);
+    CombinedTexture->AddToRoot();
     PreviewBrush->SetResourceObject(CombinedTexture);
     FallbackTexture = FChannelMixerUtils::CreateFallbackTexture();
+    FallbackTexture->AddToRoot();
 
     // Show main window
     FChannelMixerUI::ShowTextureMixerWindow(this);
