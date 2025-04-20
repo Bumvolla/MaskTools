@@ -3,29 +3,29 @@
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "MaskTools",
-	"Description": "",
+	"Description": "Editor extension with common tools for working with mask textures",
 	"Category": "Other",
 	"CreatedBy": "Sora Mas",
 	"CreatedByURL": "bumvolla.github.io",
-	"DocsURL": "",
-	"MarketplaceURL": "",
-	"SupportURL": "",
+	"DocsURL": "https://bumvolla.github.io/2025/04/20/MaskToolsDocs/",
+	"MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/0d7fb6db-b5ad-4375-9330-f659a633ffd1",
+	"SupportURL": "bumvolla.github.io/contact",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
-	"Installed": false,
+	"Installed": true,
 	"Modules": [
 		{
 			"Name": "MaskTools",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		},
-				{
+		{
 			"Name": "ChannelMixer",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		},
-				{
+		{
 			"Name": "EnchancedEditorLogging",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
@@ -34,16 +34,6 @@
 			"Name": "ChannelSplitter",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "EditorScriptingUtilities",
-			"Enabled": true
-		},
-		{
-			"Name": "Niagara",
-			"Enabled": true
 		}
 	]
 }

@@ -1,4 +1,5 @@
-// Copyright (c) 2025 Sora Mas \n All rights reserved. 
+// Copyright (c) 2025 Sora Mas
+// All rights reserved.
 
 using UnrealBuildTool;
 
@@ -13,11 +14,8 @@ public class ChannelSplitter : ModuleRules
             {
                 "Core",
                 "AssetRegistry",
-                "UMG",
-                "Niagara",
                 "AssetTools",
                 "ContentBrowser",
-                "EditorScriptingUtilities",
                 "UnrealEd",
                 "RenderCore",
                 "EnchancedEditorLogging"
@@ -33,25 +31,13 @@ public class ChannelSplitter : ModuleRules
                 "Slate",
                 "SlateCore",
                 "ApplicationCore",
-                "Projects",
-                "InputCore",
                 "EditorFramework",
                 "ToolMenus",
                 "UnrealEd",
                 "Projects",
                 "MaskTools",
 
-
-
-
-				// ... add private dependencies that you statically link with here ...	
 			}
             );
-
-        DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				
-			});
 	}
 }

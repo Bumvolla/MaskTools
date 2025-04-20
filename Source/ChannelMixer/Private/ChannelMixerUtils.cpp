@@ -1,5 +1,6 @@
 // Copyright (c) 2025 Sora Mas
 // All rights reserved.
+
 #include "ChannelMixerUtils.h"
 #include "ChannelMixer.h"
 #include "Engine/TextureRenderTarget2D.h"
