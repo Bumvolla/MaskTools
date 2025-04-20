@@ -75,6 +75,10 @@ void FChannelMixer::OpenTextureMixerWindow()
     ExportPath = Config->DefaultMaskSavePath.Path;
     TextureName = Config->DefaultMaskName;
 
+    TexturePrefix = Config->DefaultMaskPrefix;
+    TextureName = Config->DefaultMaskName;
+    TextureSuffix = Config->DefaultMaskSuffix;
+
     PrefixHintText = Config->DefaultMaskPrefix;
     NameHintText = TextureName;
     SuffixHintText = Config->DefaultMaskSuffix;
@@ -87,10 +91,13 @@ void FChannelMixer::OpenTextureMixerWindow()
     UWorld* World = GEditor->GetEditorWorldContext().World();
     UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureMixer"));
     BlendMaterial = UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, BaseMaterial);
+    BlendMaterial->AddToRoot();
     PreviewBrush = MakeShared<FSlateBrush>();
     CombinedTexture = UKismetRenderingLibrary::CreateRenderTarget2D(World, TextureResolution, TextureResolution);
+    CombinedTexture->AddToRoot();
     PreviewBrush->SetResourceObject(CombinedTexture);
     FallbackTexture = FChannelMixerUtils::CreateFallbackTexture();
+    FallbackTexture->AddToRoot();
 
     // Show main window
     FChannelMixerUI::ShowTextureMixerWindow(this);
@@ -112,11 +119,11 @@ FString FChannelMixer::BuildPackagePath()
     else 
         tempPrefix = FString::Printf(TEXT("%s_"), *TexturePrefix);
 
-    TextureName.IsEmpty() ? Config->DefaultMaskName : TextureName;
+    tempName = TextureName.IsEmpty() ? Config->DefaultMaskName : TextureName;
 
     if (TextureSuffix.IsEmpty())
     {
-        if (Config->bDefaultAddSuffix) tempSuffix = FString::Printf(TEXT("%s_"), *Config->DefaultMaskSuffix);
+        if (Config->bDefaultAddSuffix) tempSuffix = FString::Printf(TEXT("_%s"), *Config->DefaultMaskSuffix);
         else tempSuffix = TEXT("");
     }
     else 
