@@ -17,7 +17,6 @@ public class ChannelMixer : ModuleRules
                 "Niagara",
                 "AssetTools",
                 "ContentBrowser",
-                "EditorScriptingUtilities",
                 "UnrealEd",
                 "RenderCore",
                 "EnchancedEditorLogging",
