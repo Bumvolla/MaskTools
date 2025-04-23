@@ -3,6 +3,7 @@
 #include "MaskTools.h"
 #include "MaskToolsConfig.h"
 #include "ISettingsModule.h"
+#include "sma.h"
 
 #define LOCTEXT_NAMESPACE "FMaskToolsModule"
 
@@ -26,6 +27,8 @@ void FMaskToolsModule::RegisterSettings()
             GetMutableDefault<UMaskToolsConfig>()
         );
     }
+
+    MASKTOOLS_LogEvent(TEXT("Initialized mask tools"));
 }
 
 void FMaskToolsModule::UnregisterSettings()

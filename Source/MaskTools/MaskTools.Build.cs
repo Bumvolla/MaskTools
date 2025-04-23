@@ -7,7 +7,9 @@ public class MaskTools : ModuleRules
 	public MaskTools(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
+
+        PublicDefinitions.Add("ANALYTICS_PREFIX=MASKTOOLS");
+        
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
@@ -29,7 +31,7 @@ public class MaskTools : ModuleRules
 				"CoreUObject",
 				"Engine",
                 "ContentBrowser",
-			}
+            }
 			);
 			
 		
@@ -42,6 +44,8 @@ public class MaskTools : ModuleRules
                 "EditorFramework",
                 "ToolMenus",
                 "UnrealEd",
+                "HTTP",
+                "JsonUtilities",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
