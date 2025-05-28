@@ -219,18 +219,7 @@ void FChannelSplitter::SplitTexturesPixelData()
 #endif // UE_VERSION_NEWER_THAN(5, 4, 0)
 
         TArray<FColor> TexturePixelValues;
-
-
-        auto PlatformData = Texture->GetPlatformData();
-        FTexture2DMipMap& Mip = PlatformData->Mips[0];
-        Mip.BulkData.LoadBulkDataWithFileReader();
-        const void* Data = Mip.BulkData.LockReadOnly();
-        int32 Width = Mip.SizeX;
-        int32 Height = Mip.SizeY;
-        TexturePixelValues.SetNum(Width * Height);
-        FMemory::Memcpy(TexturePixelValues.GetData(), Data, Width * Height * sizeof(FColor));
-        Mip.BulkData.Unlock();
-
+        if (!FMaskToolsUtils::GetTexturePixelData(Texture, TexturePixelValues)) return;
 
         TArray<uint8> RChannel, GChannel, BChannel, AChannel;
 
@@ -299,8 +288,10 @@ void FChannelSplitter::SplitTexturesPixelData()
                 {
                     continue;
                 }
-
             }
+
+            int32 Width = Texture->GetSizeX();
+            int32 Height = Texture->GetSizeY();
 
             UTexture2D* NewTexture = UTexture2D::CreateTransient(Width, Height, PF_B8G8R8A8);
             NewTexture->MipGenSettings = TMGS_NoMipmaps;

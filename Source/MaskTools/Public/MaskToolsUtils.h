@@ -14,4 +14,6 @@ struct MASKTOOLS_API FMaskToolsUtils
     static TArray<UTexture2D*> SyncronousLoadCBTextures();
 
     static FString GetCleanPathName(UObject* OuterObject);
+
+    static bool GetTexturePixelData(UTexture2D* Texture, TArray<FColor>& OutData);
 };
