@@ -19,7 +19,8 @@ public class ChannelMixer : ModuleRules
                 "EditorScriptingUtilities",
                 "UnrealEd",
                 "RenderCore",
-                "EnchancedEditorLogging"
+                "EnchancedEditorLogging",
+                "InputCore"
             }
             );
 

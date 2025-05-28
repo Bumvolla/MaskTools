@@ -3,6 +3,7 @@
 
 #include "ChannelMixerUtils.h"
 #include "ChannelMixer.h"
+#include <MaskToolsUtils.h>
 #include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -13,7 +14,6 @@
 
 #include "AssetRegistry/AssetRegistryModule.h"
 
-#include "TextureCompiler.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 
@@ -66,10 +66,10 @@ UTexture2D* FChannelMixerUtils::CreateMaskFromGrayscales(UTexture2D* RedChannel,
 
     UTexture2D* FallbackTexture = CreateFallbackTexture();
 
-    if (RedChannel) ForceTextureCompilation(RedChannel);
-    if (GreenChannel) ForceTextureCompilation(GreenChannel);
-    if (BlueChannel) ForceTextureCompilation(RedChannel);
-    if (AlphaChannel) ForceTextureCompilation(GreenChannel);
+    if (RedChannel) FMaskToolsUtils::ForceTextureCompilation(RedChannel);
+    if (GreenChannel) FMaskToolsUtils::ForceTextureCompilation(GreenChannel);
+    if (BlueChannel) FMaskToolsUtils::ForceTextureCompilation(RedChannel);
+    if (AlphaChannel) FMaskToolsUtils::ForceTextureCompilation(GreenChannel);
 
     MaterialInstance->SetTextureParameterValue(TEXT("Red"), RedChannel ? RedChannel : FallbackTexture);
     MaterialInstance->SetTextureParameterValue(TEXT("Green"), GreenChannel ? GreenChannel : FallbackTexture);
@@ -130,13 +130,6 @@ UTexture2D* FChannelMixerUtils::CreateTextureFromRT(UTextureRenderTarget2D* Rend
 
     return OutTexture;
 
-}
-
-void FChannelMixerUtils::ForceTextureCompilation(UTexture2D* Texture)
-{
-    FTextureCompilingManager::Get().FinishCompilation({ Texture });
-    Texture->SetForceMipLevelsToBeResident(30.f);
-    Texture->WaitForStreaming(true);
 }
 #pragma endregion
 

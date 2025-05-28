@@ -4,6 +4,7 @@
 #include "ChannelMixer.h"
 #include "ChannelMixerUI.h"
 #include "ChannelMixerUtils.h"
+#include "MaskToolsUtils.h"
 
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
@@ -150,7 +151,7 @@ FReply FChannelMixer::ImportTextureFromCB(const FString& ChannelName, TSharedPtr
         if (UTexture2D* SelectedTexture = Cast<UTexture2D>(SelectedObject))
         {
             //This ensures texture is fully loaded before using it for the render target
-            FChannelMixerUtils::ForceTextureCompilation(SelectedTexture);
+            FMaskToolsUtils::ForceTextureCompilation(SelectedTexture);
 
             CreateAndSetPreviewBrush(SelectedTexture, ChannelTexture, ChannelImage);
             SetTextureParameterValue(ChannelName, SelectedTexture);
@@ -171,7 +172,6 @@ FReply FChannelMixer::ImportTextureFromCB(const FString& ChannelName, TSharedPtr
 
 void FChannelMixer::UpdatePreviewTexture()
 {
-
 
     UWorld* World = GEditor->GetEditorWorldContext().World();
     UKismetRenderingLibrary::ClearRenderTarget2D(World, CombinedTexture, FLinearColor::Black);

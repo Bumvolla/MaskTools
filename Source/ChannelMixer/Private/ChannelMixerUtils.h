@@ -16,7 +16,7 @@
 /**
  * Utility functions.
  */
-struct  FChannelMixerUtils
+struct FChannelMixerUtils
 {
     // Channel mixer utility functions
 
@@ -35,11 +35,9 @@ struct  FChannelMixerUtils
 
     static UTexture2D* CreateTextureFromRT(UTextureRenderTarget2D* RenderTarget);
 
-    static void ForceTextureCompilation(UTexture2D* Texture);
-
 };
 
-UCLASS()
+UCLASS(BlueprintType)
 class UChannelMixerBPLib : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
