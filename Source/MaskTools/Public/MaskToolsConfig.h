@@ -5,7 +5,9 @@
 
 #include "CoreMinimal.h"
 #include "MaskEnums.h"
+#include "ImageCore.h"
 #include "MaskToolsConfig.generated.h"
+
 
 /**
  * 
@@ -74,6 +76,12 @@ public:
 	*/
 	UPROPERTY(EditAnywhere, config, Category = "Texture Splitter")
 	EMaskCreationMethod SplitterCreationMethod;
+
+	/*
+	Sample
+	*/
+	UPROPERTY(EditAnywhere, config, Category = "Texture Splitter")
+	EResizeMethod ResizeImageFilterMethod;
 
 	/*
 	Defines if Split Channels will attempt to search for completely black channels in splitted textures

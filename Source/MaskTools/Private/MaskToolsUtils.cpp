@@ -4,7 +4,17 @@
 #include "MaskToolsUtils.h"
 #include "TextureCompiler.h"
 #include <ContentBrowserModule.h>
+
+#include "AssetToolsModule.h"
+#include "IAssetTools.h"
 #include "IContentBrowserSingleton.h"
+#include "ImageCore.h"
+#include "MaskEnums.h"
+#include "MaskToolsConfig.h"
+#include "PackageTools.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+
+using ::FMaskToolsPrivateHelpers;
 
 void FMaskToolsUtils::ForceTextureCompilation(UTexture2D* Texture)
 {
@@ -49,53 +59,144 @@ FString FMaskToolsUtils::GetCleanPathName(UObject* OuterObject)
     return PathName;
 }
 
-bool FMaskToolsUtils::GetTexturePixelData(UTexture2D* Texture, TArray<FColor>& OutData)
+bool FMaskToolsUtils::GetTexturePixelData(UTexture2D* Texture, int32 DestinationSize, TArray<FLinearColor>& OutData)
 {
-
-
     if (!IsValid(Texture)) return false;
-
-    FScopedSlowTask GetPixelDataTask(3.f, FText::FromString("Retrieving texture pixel data..."));
+    
+    FScopedSlowTask GetPixelDataTask(2.f, FText::FromString("Retrieving texture pixel data..."));
     GetPixelDataTask.MakeDialog();
 
-    GetPixelDataTask.EnterProgressFrame(1.f, FText::FromString("Trying to acces texture Source..."));
+    auto FillOutDataFromImage = [&OutData, DestinationSize](const FImage& Image)
+    {
+
+        const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+        EResizeMethod ResizeMethod = Config->ResizeImageFilterMethod;
+        
+        FImage ResizedImage;
+        ResizedImage.SizeX = DestinationSize;
+        ResizedImage.SizeY = DestinationSize;
+        
+        FImageCore::ResizeImage(Image, ResizedImage,FMaskToolsPrivateHelpers::FindResizeMethod(ResizeMethod));
+        TArray<FLinearColor> tmpData;
+        tmpData.Reserve(Image.SizeX * Image.SizeY);
+            for (int Y = 0; Y < Image.SizeY; Y++)
+        {
+            for (int X = 0; X < Image.SizeX; X++)
+            {
+                tmpData.Add(Image.GetOnePixelLinear(X, Y));
+            }
+        }
+        OutData = tmpData;
+    };
+
+    GetPixelDataTask.EnterProgressFrame(1.f, FText::FromString("Trying to access texture CPU Copy..."));
+    if (FSharedImageConstRef TextureCPUCopy = Texture->GetCPUCopy())
+    {
+        FImage Image;
+        TextureCPUCopy->CopyTo(Image);
+        FillOutDataFromImage(Image);
+        return true;
+    }
+
+    GetPixelDataTask.EnterProgressFrame(1.f, FText::FromString("Trying to access texture Source..."));
     if (Texture->Source.IsValid())
     {
-        const uint8* SourceData = Texture->Source.LockMipReadOnly(0);
-        int32 Width = Texture->Source.GetSizeX();
-        int32 Height = Texture->Source.GetSizeY();
-
-        OutData.SetNum(Width * Height);
-        FMemory::Memcpy(OutData.GetData(), SourceData, Width * Height * sizeof(FColor));
-
-        Texture->Source.UnlockMip(0);
-        return true;
+        FImage Image;
+        if (Texture->Source.GetMipImage(Image, 0, 0, 0))
+        {
+            FillOutDataFromImage(Image);
+            return true;
+        }
     }
 
-    GetPixelDataTask.EnterProgressFrame(1.f, FText::FromString("Trying to acces texture GPU Resource..."));
-    FTexture2DRHIRef TextureRHI = Texture->GetResource() ? Texture->GetResource()->GetTexture2DRHI() : nullptr;
-    if (TextureRHI.IsValid())
-    {
-        FRHICommandListImmediate& RHICmdList = GetImmediateCommandList_ForRenderCommand();
-        RHICmdList.ReadSurfaceData(TextureRHI, FIntRect(0, 0, Texture->GetSizeX(), Texture->GetSizeY()), OutData, FReadSurfaceDataFlags());
-        return true;
-    }
-
-    GetPixelDataTask.EnterProgressFrame(1.f, FText::FromString("Trying to acces texture Bulk Data..."));
-    FTexturePlatformData* PlatformData = Texture->GetPlatformData();
-    if (!PlatformData) return false;
-
-    FTexture2DMipMap& Mip = PlatformData->Mips[0];
-    if (Mip.BulkData.DoesExist())
-    {
-        Mip.BulkData.LoadBulkDataWithFileReader();
-        const void* Data = Mip.BulkData.LockReadOnly();
-        int32 Width = Mip.SizeX;
-        int32 Height = Mip.SizeY;
-        OutData.SetNum(Width * Height);
-        FMemory::Memcpy(OutData.GetData(), Data, Width * Height * sizeof(FColor));
-        Mip.BulkData.Unlock();
-        return true;
-    }
     return false;
+}
+
+UTexture2D* FMaskToolsUtils::CreateStaticTextureEditorOnly(UTexture2D* TransientTexture, FString InName,
+    TextureCompressionSettings InCompressionSettings, TextureMipGenSettings InMipSettings)
+{
+    if (TransientTexture == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("EmptyTexture"))
+        return nullptr;
+    }
+
+    FString Name;
+    FString PackageName;
+    IAssetTools& AssetTools = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+
+    //Use asset name only if directories are specified, otherwise full path
+    if (!InName.StartsWith(TEXT("/")))
+    {
+        FString AssetName = TransientTexture->GetOutermost()->GetName();
+        const FString SanitizedBasePackageName = UPackageTools::SanitizePackageName(AssetName);
+        const FString PackagePath = FPackageName::GetLongPackagePath(SanitizedBasePackageName) + TEXT("/");
+        AssetTools.CreateUniqueAssetName(PackagePath, InName, PackageName, Name);
+    }
+    else
+    {
+        AssetTools.CreateUniqueAssetName(InName, TEXT(""), PackageName, Name);
+    }
+
+    UPackage* NewPackage = CreatePackage(*PackageName);
+    TransientTexture->Rename(*Name, NewPackage, REN_DontCreateRedirectors | REN_DoNotDirty);
+    
+    TransientTexture->SetFlags(RF_Public | RF_Standalone);
+    TransientTexture->MarkPackageDirty();
+    TransientTexture->CompressionSettings = InCompressionSettings;
+    TransientTexture->MipGenSettings = InMipSettings;
+    TransientTexture->SRGB = false;
+    TransientTexture->PostEditChange();
+
+    FAssetRegistryModule::AssetCreated(TransientTexture);
+    return TransientTexture;
+}
+
+FImageCore::EResizeImageFilter FMaskToolsPrivateHelpers::FindResizeMethod(EResizeMethod Method)
+{
+    switch (Method)
+    {
+    case EResizeMethod::AdaptiveSharp:
+        return FImageCore::EResizeImageFilter::AdaptiveSharp;
+
+    case EResizeMethod::Bilinear:
+        return FImageCore::EResizeImageFilter::Triangle;
+
+    case EResizeMethod::AdaptiveSmooth:
+        return FImageCore::EResizeImageFilter::AdaptiveSmooth;
+
+    case EResizeMethod::Box:
+        return FImageCore::EResizeImageFilter::Box;
+
+    case EResizeMethod::CubicGaussian:
+        return FImageCore::EResizeImageFilter::CubicGaussian;
+
+    case EResizeMethod::CubicMitchell:
+        return FImageCore::EResizeImageFilter::CubicMitchell;
+
+    case EResizeMethod::CubicSharp:
+         return FImageCore::EResizeImageFilter::CubicSharp;
+
+    case EResizeMethod::Default:
+        return FImageCore::EResizeImageFilter::Default;
+
+    case EResizeMethod::Flag_WrapX:
+        return FImageCore::EResizeImageFilter::Flag_WrapX;
+
+    case EResizeMethod::Flag_WrapY:
+        return FImageCore::EResizeImageFilter::Flag_WrapY;
+
+    case EResizeMethod::PointSample:
+        return FImageCore::EResizeImageFilter::PointSample;
+
+    case EResizeMethod::Triangle:
+        return FImageCore::EResizeImageFilter::Triangle;
+
+    case EResizeMethod::WithoutFlagsMask:
+        return FImageCore::EResizeImageFilter::WithoutFlagsMask;
+
+    default:
+        return FImageCore::EResizeImageFilter::Default;
+        
+    }
 }

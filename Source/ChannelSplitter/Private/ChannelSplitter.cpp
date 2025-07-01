@@ -19,6 +19,8 @@
 #include "UObject/SavePackage.h"
 
 #include "ChannelSpliterStyle.h"
+#include "ImageUtils.h"
+#include "MaterialDomain.h"
 #include "MaskTools/Public/MaskToolsConfig.h"
 
 #include "Misc/EngineVersionComparison.h"
@@ -204,12 +206,20 @@ void FChannelSplitter::SplitTexturesPixelData()
     {
 
         // Copy original texture values and settings
+        const FString PathName = FMaskToolsUtils::GetCleanPathName(Texture);
+        
         const TEnumAsByte<TextureMipGenSettings> MipGenSettings = Texture->MipGenSettings;
         const int32 LodBias = Texture->LODBias;
         const int32 MaxTextureSize = Texture->MaxTextureSize;
         const bool bPreserveBorders = Texture->bPreserveBorder;
         const uint8 NeverStream = Texture->NeverStream;
+        const uint32 Size = Texture ->GetSizeX();
 
+        if (Size != Texture->GetSizeY())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Texture width and height mismatch, currently not supported"))
+            return;
+        }
 #if UE_VERSION_NEWER_THAN(5, 2, 0)
         const TEnumAsByte<TextureCookPlatformTilingSettings> CookPlatformTilingSettings = Texture->CookPlatformTilingSettings;
 #endif // UE_VERSION_NEWER_THAN(5, 2, 0)
@@ -218,67 +228,69 @@ void FChannelSplitter::SplitTexturesPixelData()
         const bool bOodlePreserveExtremes = Texture->bOodlePreserveExtremes;
 #endif // UE_VERSION_NEWER_THAN(5, 4, 0)
 
-        TArray<FColor> TexturePixelValues;
-        if (!FMaskToolsUtils::GetTexturePixelData(Texture, TexturePixelValues)) return;
-
-        TArray<uint8> RChannel, GChannel, BChannel, AChannel;
+        TArray<FLinearColor> TexturePixelValues;
+        if (!FMaskToolsUtils::GetTexturePixelData(Texture, Size, TexturePixelValues))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to get texture pixel data"));
+            return;
+        }
+        if (TexturePixelValues.Num() <= 0)
+        {
+            // UE_LOG(LogTemp, Warning, TEXT("Empty pixel data array"));
+            return;
+        }
+        TArray<FColor> RChannel, GChannel, BChannel, AChannel;
 
         bool bExportRed = false;
         bool bExportGreen = false;
         bool bExportBlue = false;
         bool bExportAlpha = false;
-
-        for (FColor Pixel : TexturePixelValues)
+        
+        for (FLinearColor LinearPixel : TexturePixelValues)
         {
+
+            FColor Pixel = LinearPixel.ToFColor(false);
+            
             if (!bExportRed)
             {
                 bExportRed = Pixel.R != 0 && Pixel.R != 255;
             }
-            RChannel.Add(Pixel.R);
+            FColor PixelRed (Pixel.R,0,0,0);
+            RChannel.Add(PixelRed);
 
             if (!bExportGreen)
             {
                 bExportGreen = Pixel.G != 0 && Pixel.G != 255;
             }
-            GChannel.Add(Pixel.G);
+            FColor PixelGreen (Pixel.G ,0,0,0);
+            GChannel.Add(PixelGreen);
 
             if (!bExportBlue)
             {
                 bExportBlue = Pixel.B != 0 && Pixel.B != 255;
             }
-            BChannel.Add(Pixel.B);
+            FColor PixelBlue (Pixel.B ,0 ,0 ,0);
+            BChannel.Add(PixelBlue);
 
             if (!bExportAlpha)
             {
                 bExportAlpha = Pixel.A != 0 && Pixel.A != 255;
             }
-            AChannel.Add(Pixel.A);
+            FColor PixelAlpha(Pixel.A ,0 ,0 ,0 );
+            AChannel.Add(PixelAlpha);
         }
-
-        TArray<TArray<uint8>> ChannelData;
-        ChannelData.Add(RChannel);
-        ChannelData.Add(GChannel);
-        ChannelData.Add(BChannel);
-        ChannelData.Add(AChannel);
-
+        
         TArray<bool> bExportChannel;
         bExportChannel.Add(bExportRed);
         bExportChannel.Add(bExportGreen);
         bExportChannel.Add(bExportBlue);
         bExportChannel.Add(bExportAlpha);
 
-        // Helper lambda to create a color with one channel set
-        auto MakeColor = [](int32 ChannelIndex, uint8 Value) -> FColor
-            {
-                switch (ChannelIndex)
-                {
-                case 0: return FColor(Value, 0, 0, 255); // Red
-                case 1: return FColor(0, Value, 0, 255); // Green
-                case 2: return FColor(0, 0, Value, 255); // Blue
-                case 3: return FColor(0, 0, 0, Value);   // Alpha
-                default: return FColor::Black;
-                }
-            };
+        TArray<TArray<FColor>> ChannelPixelValues;
+        ChannelPixelValues.Add(RChannel);
+        ChannelPixelValues.Add(GChannel);
+        ChannelPixelValues.Add(BChannel);
+        ChannelPixelValues.Add(AChannel);
 
         for (int32 ChannelIndex = 0; ChannelIndex < 4; ++ChannelIndex)
         {
@@ -286,54 +298,23 @@ void FChannelSplitter::SplitTexturesPixelData()
             {
                 if (!bExportChannel[ChannelIndex])
                 {
+                    FString DebugLine = FString::Printf(TEXT("%s channel discarded in texture %s"), *SuffixArray[ChannelIndex], *PathName);
+                    UE_LOG(LogTemp, Warning, TEXT("%s"), *DebugLine);
                     continue;
                 }
             }
 
-            int32 Width = Texture->GetSizeX();
-            int32 Height = Texture->GetSizeY();
+            FCreateTexture2DParameters TextureParameters;
+            TextureParameters.TextureGroup = TextureGroup::TEXTUREGROUP_World;
+            TextureParameters.bSRGB = false;
+            TextureParameters.CompressionSettings = TC_Grayscale;
+            TextureParameters.MipGenSettings = MipGenSettings;
+            TextureParameters.bUseAlpha = false;
+            
+            UTexture2D* NewTexture = FImageUtils::CreateTexture2D(Size, Size, ChannelPixelValues[ChannelIndex], World, TEXT(""), EObjectFlags::RF_KeepForCooker, TextureParameters);
 
-            UTexture2D* NewTexture = UTexture2D::CreateTransient(Width, Height, PF_B8G8R8A8);
-            NewTexture->MipGenSettings = TMGS_NoMipmaps;
-            NewTexture->SRGB = false;
-
-            FTexture2DMipMap& ChannelMip = NewTexture->GetPlatformData()->Mips[0];
-            void* TextureData = ChannelMip.BulkData.Lock(LOCK_READ_WRITE);
-
-            FColor* FormattedImageData = static_cast<FColor*>(TextureData);
-            for (int32 PixelIndex = 0; PixelIndex < Width * Height; ++PixelIndex)
-            {
-                FormattedImageData[PixelIndex] = MakeColor(ChannelIndex, ChannelData[ChannelIndex][PixelIndex]);
-            }
-
-            ChannelMip.BulkData.Unlock();
-            NewTexture->UpdateResource();
-
-            const FString PathName = FMaskToolsUtils::GetCleanPathName(Texture);
             const FString PackageName = FString::Printf(TEXT("%s%s"), *PathName, *SuffixArray[ChannelIndex]);
-
-            UPackage* Package = CreatePackage(*PackageName);
-
-            // Duplicate the transient texture into the package
-            UTexture2D* SavedTexture = DuplicateObject<UTexture2D>(NewTexture, Package, TEXT("miau"));
-
-            // Mark the package dirty so the editor knows it needs to be saved
-            SavedTexture->SetFlags(RF_Public | RF_Standalone);
-            Package->MarkPackageDirty();
-
-            // Notify asset registry so it appears in the content browser
-            FAssetRegistryModule::AssetCreated(SavedTexture);
-
-            // Save the package to disk (optional — useful for editor-only tools)
-            FSavePackageArgs SaveArgs;
-            SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
-            SaveArgs.Error = GError;
-            SaveArgs.bWarnOfLongFilename = true;
-            SaveArgs.SaveFlags = SAVE_NoError;
-
-            FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-
-            UPackage::SavePackage(Package, SavedTexture, *PackageFileName, SaveArgs);
+            UTexture2D* SavedTexture = FMaskToolsUtils::CreateStaticTextureEditorOnly(NewTexture, PackageName, TC_Grayscale, TMGS_FromTextureGroup);
 
             // Notify the editor about changes for safety
             SavedTexture->PreEditChange(nullptr);
@@ -355,6 +336,7 @@ void FChannelSplitter::SplitTexturesPixelData()
             // Notify the editor changes finished
             SavedTexture->PostEditChange();
             SavedTexture->MarkPackageDirty();
+
         }
 
     }
