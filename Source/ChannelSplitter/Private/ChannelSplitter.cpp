@@ -84,9 +84,7 @@ void FChannelSplitter::SplitTextures()
         case EMaskCreationMethod::PixelData:
             SplitTexturesPixelData();
             break;
-        case EMaskCreationMethod::Shader:
-            SplitTexturesShaderBased();
-            break;
+
     }
 
 }
@@ -245,39 +243,26 @@ void FChannelSplitter::SplitTexturesPixelData()
         bool bExportGreen = false;
         bool bExportBlue = false;
         bool bExportAlpha = false;
+
+        auto AddPixelToArray = [](const uint8& ColorValue, bool& bExportColor, TArray<FColor>& OutPixelValues)
+        {
+            if (!bExportColor)
+            {
+                bExportColor = ColorValue != 0 && ColorValue != 255;
+            }
+            OutPixelValues.Add(FColor(ColorValue, 0, 0, 0));
+        };
         
         for (FLinearColor LinearPixel : TexturePixelValues)
         {
 
             FColor Pixel = LinearPixel.ToFColor(false);
             
-            if (!bExportRed)
-            {
-                bExportRed = Pixel.R != 0 && Pixel.R != 255;
-            }
-            FColor PixelRed (Pixel.R,0,0,0);
-            RChannel.Add(PixelRed);
-
-            if (!bExportGreen)
-            {
-                bExportGreen = Pixel.G != 0 && Pixel.G != 255;
-            }
-            FColor PixelGreen (Pixel.G ,0,0,0);
-            GChannel.Add(PixelGreen);
-
-            if (!bExportBlue)
-            {
-                bExportBlue = Pixel.B != 0 && Pixel.B != 255;
-            }
-            FColor PixelBlue (Pixel.B ,0 ,0 ,0);
-            BChannel.Add(PixelBlue);
-
-            if (!bExportAlpha)
-            {
-                bExportAlpha = Pixel.A != 0 && Pixel.A != 255;
-            }
-            FColor PixelAlpha(Pixel.A ,0 ,0 ,0 );
-            AChannel.Add(PixelAlpha);
+            AddPixelToArray(Pixel.R, bExportRed, RChannel);
+            AddPixelToArray(Pixel.G, bExportGreen, GChannel);
+            AddPixelToArray(Pixel.B, bExportBlue, BChannel);
+            AddPixelToArray(Pixel.A, bExportAlpha, AChannel);
+            
         }
         
         TArray<bool> bExportChannel;
