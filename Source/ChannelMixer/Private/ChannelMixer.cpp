@@ -9,7 +9,6 @@
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
 #include "Modules/ModuleManager.h"
-#include "Interfaces/IPluginManager.h"
 #include "LevelEditor.h"
 
 #include "ChannelMixerStyle.h"
@@ -90,7 +89,11 @@ void FChannelMixer::OpenTextureMixerWindow()
 
     // Create default values
     UWorld* World = GEditor->GetEditorWorldContext().World();
-    UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureMixer"));
+    UMaterialInterface* BaseMaterial = FMaskToolsPrivateHelpers::LoadPluginMaterial(TEXT("MM_TextureMixer"));
+    if (BaseMaterial == nullptr)
+    {
+        UE_LOG(LogChannelMixer, Error, TEXT("Failed to load texture mixer material, make sure you got the necesary content"));
+    }
     BlendMaterial = UKismetMaterialLibrary::CreateDynamicMaterialInstance(World, BaseMaterial);
     BlendMaterial->AddToRoot();
     PreviewBrush = MakeShared<FSlateBrush>();

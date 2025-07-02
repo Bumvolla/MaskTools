@@ -9,10 +9,13 @@
 #include "IAssetTools.h"
 #include "IContentBrowserSingleton.h"
 #include "ImageCore.h"
+#include "Logging.h"
 #include "MaskEnums.h"
 #include "MaskToolsConfig.h"
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Interfaces/IPluginManager.h"
+#include "Logging.h"
 
 using ::FMaskToolsPrivateHelpers;
 
@@ -200,3 +203,29 @@ FImageCore::EResizeImageFilter FMaskToolsPrivateHelpers::FindResizeMethod(EResiz
         
     }
 }
+
+UMaterialInterface* FMaskToolsPrivateHelpers::LoadPluginMaterial(const FString& MaterialName)
+{
+    const FString PluginName = TEXT("MaskTools");
+    TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin(PluginName);
+
+    if (!Plugin.IsValid())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Plugin %s not found"), *PluginName);
+        return nullptr;
+    }
+
+    FString PluginAssetPath = Plugin->GetMountedAssetPath();  // e.g., "/MaskTools"
+    FString MaterialPath = PluginAssetPath / TEXT("MM/") / MaterialName + TEXT(".") + MaterialName;
+        
+    UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, *MaterialPath);
+
+    if (!BaseMaterial)
+    {
+        UE_LOG(LogMaskToolsUtils, Error, TEXT("Failed to load material at path: %s"), *MaterialPath);
+        return nullptr;
+    }
+
+    return BaseMaterial;
+}
+

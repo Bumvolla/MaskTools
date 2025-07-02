@@ -28,7 +28,8 @@ public class MaskTools : ModuleRules
                 "EditorFramework",
                 "ToolMenus",
                 "UnrealEd",
-                "ImageCore"
+                "ImageCore",
+                "Projects"
 			}
 			);
 	}

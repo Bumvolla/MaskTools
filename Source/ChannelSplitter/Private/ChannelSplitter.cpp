@@ -103,10 +103,10 @@ void FChannelSplitter::SplitTexturesMaterialBased()
     {
         TArray<UMaterialInstanceDynamic*> SplitMaterialsArray;
 
-        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_R")), World, FName("Red")));
-        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_G")), World, FName("Green")));
-        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_B")), World, FName("Blue")));
-        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(LoadObject<UMaterialInterface>(nullptr, TEXT("/MaskTools/MM/MM_TextureSplitter_A")), World, FName("Alpha")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(FMaskToolsPrivateHelpers::LoadPluginMaterial(TEXT("MM_TextureSplitter_R")), World, FName("Red")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(FMaskToolsPrivateHelpers::LoadPluginMaterial(TEXT("MM_TextureSplitter_G")), World, FName("Green")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(FMaskToolsPrivateHelpers::LoadPluginMaterial(TEXT("MM_TextureSplitter_B")), World, FName("Blue")));
+        SplitMaterialsArray.Add(UMaterialInstanceDynamic::Create(FMaskToolsPrivateHelpers::LoadPluginMaterial(TEXT("MM_TextureSplitter_A")), World, FName("Alpha")));
 
         // Copy original texture values and settings
         const int32 OgTexResX = Texture->GetImportedSize().X;

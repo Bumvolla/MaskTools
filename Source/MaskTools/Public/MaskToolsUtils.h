@@ -30,4 +30,7 @@ struct MASKTOOLS_API FMaskToolsUtils
 struct MASKTOOLS_API FMaskToolsPrivateHelpers
 {
     static FImageCore::EResizeImageFilter FindResizeMethod(EResizeMethod Method);
+
+    static UMaterialInterface* LoadPluginMaterial(const FString& MaterialName);
+    
 };
