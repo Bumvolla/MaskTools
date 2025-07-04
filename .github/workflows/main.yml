@@ -31,7 +31,7 @@ jobs:
       - name: Check Unreal instalation
         shell: powershell
         run: |
-          if (-Not (Test-Path ${{ env.UE_PATH }}UE_${{ matrix.ue-version }}\\Engine\\Build\\BatchFiles\\RunUAT.bat)) {
+          if (-Not (Test-Path ${{ env.UE_PATH }}UE_${{ matrix.ue-version }}\Engine\Build\BatchFiles\RunUAT.bat)) {
             Write-Host "Can't find ${{ matrix.ue-version }} version instalation"
             exit 1
           } else {
