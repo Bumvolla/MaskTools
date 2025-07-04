@@ -32,11 +32,13 @@ jobs:
         shell: powershell
         run: |
           if (-Not (Test-Path '${{ env.UE_PATH }}UE_${{ matrix.ue-version }}\Engine\Build\BatchFiles\RunUAT.bat')) {
-            Write-Host "Can't find ${{ matrix.ue-version }} version instalation"
             exit 1
           } else {
-            Write-Host "Version ${{ matrix.ue-version }} instalation found"
           }
+          
+      - name: Report Build Failure
+        if: ${{ failure() }}
+        run: echo "Build failed for UE ${{ matrix.ue-version }} - ${{ matrix.configuration }}"
 
       - name: Build Plugin for ${{ matrix.ue-version }} - ${{ matrix.configuration }}
         shell: powershell
