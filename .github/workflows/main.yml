@@ -1,1 +1,38 @@
 
+name: Compile Unreal Plugin
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-plugin:
+    name: Build Plugin
+    runs-on: self-hosted
+
+    env:
+      UE_PATH: "C:\\Program Files\\Epic Games\\UE_5.4"
+      PLUGIN_NAME: "MaskTools"
+      CONFIGURATION: "Development"
+      PLATFORM: "Win64"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Plugin
+        shell: pwsh
+        run: |
+          "$UE_PATH/Engine/Build/BatchFiles/RunUAT.bat" BuildPlugin \
+            -Plugin="$GITHUB_WORKSPACE/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.uplugin" \
+            -Package="$GITHUB_WORKSPACE/PackagedPlugins/${{ env.PLUGIN_NAME }}" \
+            -TargetPlatforms=${{ env.PLATFORM }} \
+            -Configuration=${{ env.CONFIGURATION }}
+
+      - name: Upload Built Plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PLUGIN_NAME }}-Built
+          path: ${{ github.workspace }}/PackagedPlugins/${{ env.PLUGIN_NAME }}
