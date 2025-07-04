@@ -35,10 +35,6 @@ jobs:
             exit 1
           } else {
           }
-          
-      - name: Report Build Failure
-        if: ${{ failure() }}
-        run: echo "Build failed for UE ${{ matrix.ue-version }} - ${{ matrix.configuration }}"
 
       - name: Build Plugin for ${{ matrix.ue-version }} - ${{ matrix.configuration }}
         shell: powershell
