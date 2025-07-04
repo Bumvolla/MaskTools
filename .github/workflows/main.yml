@@ -22,10 +22,21 @@ jobs:
       UE_PATH: "C:\\Program Files\\Epic Games\\"
       PLUGIN_NAME: "MaskTools"
       PLATFORM: "Win64"
+      
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Check Unreal instalation
+        shell: powershell
+        run: |
+          if (-Not (Test-Path ${{ env.UE_PATH }}UE_${{ matrix.ue-version }}\\Engine\\Build\\BatchFiles\\RunUAT.bat)) {
+            Write-Host "Can't find ${{ matrix.ue-version }} version instalation"
+            exit 1
+          } else {
+            Write-Host "Version ${{ matrix.ue-version }} instalation found"
+          }
 
       - name: Build Plugin for ${{ matrix.ue-version }} - ${{ matrix.configuration }}
         shell: powershell
