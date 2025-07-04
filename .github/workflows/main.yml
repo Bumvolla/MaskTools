@@ -34,5 +34,5 @@ jobs:
       - name: Upload Built Plugin
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PLUGIN_NAME }}-Built
-          path: ${{ github.workspace }}/PackagedPlugins/${{ env.PLUGIN_NAME }}
+          name: ${{ env.PLUGIN_NAME }}-${{ matrix.ue-version }}-${{ matrix.configuration }}
+          path: ${{ github.workspace }}/PackagedPlugins/${{ env.PLUGIN_NAME }}-${{ matrix.ue-version }}-${{ matrix.configuration }}
