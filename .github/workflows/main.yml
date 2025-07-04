@@ -29,7 +29,7 @@ jobs:
 
       - name: Build Plugin for ${{ matrix.ue-version }} - ${{ matrix.configuration }}
         shell: powershell
-        run: '&"${{ env.UE_PATH }}${{ matrix.ue-version }}\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="${{ github.workspace }}\${{ env.PLUGIN_NAME }}.uplugin" -Package="${{ github.workspace }}\PackagedPlugins\${{ env.PLUGIN_NAME }}" -TargetPlatforms=${{ env.PLATFORM }} -Configuration=${{ matrix.configuration }}'
+        run: '&"${{ env.UE_PATH }}UE_${{ matrix.ue-version }}\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="${{ github.workspace }}\${{ env.PLUGIN_NAME }}.uplugin" -Package="${{ github.workspace }}\PackagedPlugins\${{ env.PLUGIN_NAME }}" -TargetPlatforms=${{ env.PLATFORM }} -Configuration=${{ matrix.configuration }}'
 
       - name: Upload Built Plugin
         uses: actions/upload-artifact@v4
