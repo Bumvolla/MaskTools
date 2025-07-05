@@ -22,7 +22,7 @@ struct MASKTOOLS_API FMaskToolsUtils
 
     static FString GetCleanPathName(UObject* OuterObject);
 
-    static bool GetTexturePixelData(UTexture2D* Texture, int32 DestinationSize, TArray<FLinearColor>& OutData);
+    static bool GetTexturePixelData(UTexture2D* Texture, int32 DestinationSize, EResizeMethod ResizeMethod, TArray<FLinearColor>& OutData);
 
     static UTexture2D* CreateStaticTextureEditorOnly(UTexture2D* TransientTexture, FString InName, TextureCompressionSettings InCompressionSettings, TextureMipGenSettings InMipSettings);
 

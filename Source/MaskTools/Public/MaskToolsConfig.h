@@ -31,6 +31,12 @@ public:
 	Sample
 	*/
 	UPROPERTY(EditAnywhere, config, Category = "Texture Mixer")
+	EResizeMethod MixerResizeMethod;
+	
+	/*
+	Sample
+	*/
+	UPROPERTY(EditAnywhere, config, Category = "Texture Mixer")
 	FString DefaultMaskPrefix;
 
 	/*
@@ -81,7 +87,7 @@ public:
 	Sample
 	*/
 	UPROPERTY(EditAnywhere, config, Category = "Texture Splitter")
-	EResizeMethod ResizeImageFilterMethod;
+	EResizeMethod SplitterResizeMethod;
 
 	/*
 	Defines if Split Channels will attempt to search for completely black channels in splitted textures

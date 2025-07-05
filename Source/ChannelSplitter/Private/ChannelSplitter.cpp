@@ -227,7 +227,8 @@ void FChannelSplitter::SplitTexturesPixelData()
 #endif // UE_VERSION_NEWER_THAN(5, 4, 0)
 
         TArray<FLinearColor> TexturePixelValues;
-        if (!FMaskToolsUtils::GetTexturePixelData(Texture, Size, TexturePixelValues))
+        EResizeMethod ResizeMethod = Config->SplitterResizeMethod;
+        if (!FMaskToolsUtils::GetTexturePixelData(Texture, Size, ResizeMethod,TexturePixelValues))
         {
             UE_LOG(LogTemp, Warning, TEXT("Failed to get texture pixel data"));
             return;

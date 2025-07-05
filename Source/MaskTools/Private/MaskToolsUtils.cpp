@@ -62,18 +62,15 @@ FString FMaskToolsUtils::GetCleanPathName(UObject* OuterObject)
     return PathName;
 }
 
-bool FMaskToolsUtils::GetTexturePixelData(UTexture2D* Texture, int32 DestinationSize, TArray<FLinearColor>& OutData)
+bool FMaskToolsUtils::GetTexturePixelData(UTexture2D* Texture, int32 DestinationSize, EResizeMethod ResizeMethod, TArray<FLinearColor>& OutData)
 {
     if (!IsValid(Texture)) return false;
     
     FScopedSlowTask GetPixelDataTask(2.f, FText::FromString("Retrieving texture pixel data..."));
     GetPixelDataTask.MakeDialog();
 
-    auto FillOutDataFromImage = [&OutData, DestinationSize](const FImage& Image)
-    {
-        const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
-        EResizeMethod ResizeMethod = Config->ResizeImageFilterMethod;
-    
+    auto FillOutDataFromImage = [&OutData, DestinationSize, ResizeMethod](const FImage& Image)
+    {    
         FImage ResizedImage;
         ResizedImage.SizeX = DestinationSize;
         ResizedImage.SizeY = DestinationSize;

@@ -180,7 +180,11 @@ void FChannelMixer::RegeneratePreviewTexturePixelData()
     auto GetTextureChannelData = [this] (UTexture2D* Texture, TArray<FColor>& ChannelData)
     {
         TArray<FLinearColor> TexturePixelValues;
-        if (!FMaskToolsUtils::GetTexturePixelData(Texture, TextureResolution, TexturePixelValues))
+        
+        const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+        EResizeMethod ResizeMethod = Config->MixerResizeMethod;
+        
+        if (!FMaskToolsUtils::GetTexturePixelData(Texture, TextureResolution,  ResizeMethod, TexturePixelValues))
         {
             UE_LOG(LogTemp, Warning, TEXT("Failed to get texture pixel data"));
             return;
