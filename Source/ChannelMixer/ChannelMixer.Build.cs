@@ -1,4 +1,5 @@
-// Copyright (c) 2025 Sora Mas \n All rights reserved. 
+// Copyright (c) 2025 Sora Mas
+// All rights reserved.
 
 using UnrealBuildTool;
 
@@ -13,8 +14,6 @@ public class ChannelMixer : ModuleRules
             {
                 "Core",
                 "AssetRegistry",
-                "UMG",
-                "Niagara",
                 "AssetTools",
                 "ContentBrowser",
                 "UnrealEd",
@@ -32,26 +31,12 @@ public class ChannelMixer : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "ApplicationCore",
-                "Projects",
-                "InputCore",
                 "EditorFramework",
                 "ToolMenus",
                 "UnrealEd",
                 "Projects",
-                "MaskTools",
-
-
-
-
-				// ... add private dependencies that you statically link with here ...	
+                "MaskTools"
 			}
             );
-
-        DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				
-			});
 	}
 }

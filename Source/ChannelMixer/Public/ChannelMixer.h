@@ -23,7 +23,7 @@ public:
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
 
-    // State images
+    // Slate images
     TSharedPtr<SImage> RedChannelSImage;
     TSharedPtr<SImage> GreenChannelSImage;
     TSharedPtr<SImage> BlueChannelSImage;

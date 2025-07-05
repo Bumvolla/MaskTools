@@ -1,4 +1,5 @@
-// Copyright (c) 2025 Sora Mas \n All rights reserved. 
+// Copyright (c) 2025 Sora Mas 
+// All rights reserved. 
 
 #include "EnchancedEditorLogging.h"
 #include "Logging.h"
