@@ -7,8 +7,8 @@
 UENUM()
 enum class EMaskCreationMethod : uint8
 {
-	Material UMETA(DisplayName = "Material Based"),
-	PixelData UMETA(DisplayName = "Pixel Data Copy")
+	PixelData = 0 UMETA(DisplayName = "Pixel Data Copy"),
+	Material = 1 UMETA(DisplayName = "Material Based")
 };
 
 UENUM()

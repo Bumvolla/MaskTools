@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ImageCore.h"
+#include "MaskEnums.h"
 #include "MaskToolsUtils.generated.h"
 
 /**

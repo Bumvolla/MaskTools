@@ -71,22 +71,26 @@ bool FMaskToolsUtils::GetTexturePixelData(UTexture2D* Texture, int32 Destination
 
     auto FillOutDataFromImage = [&OutData, DestinationSize](const FImage& Image)
     {
-
         const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
         EResizeMethod ResizeMethod = Config->ResizeImageFilterMethod;
-        
+    
         FImage ResizedImage;
         ResizedImage.SizeX = DestinationSize;
         ResizedImage.SizeY = DestinationSize;
-        
-        FImageCore::ResizeImage(Image, ResizedImage,FMaskToolsPrivateHelpers::FindResizeMethod(ResizeMethod));
+        ResizedImage.Format = Image.Format;
+        ResizedImage.NumSlices = Image.NumSlices;
+        ResizedImage.Init(DestinationSize, DestinationSize, Image.Format);
+    
+        FImageCore::ResizeImage(Image, ResizedImage, FMaskToolsPrivateHelpers::FindResizeMethod(ResizeMethod));
+    
         TArray<FLinearColor> tmpData;
-        tmpData.Reserve(Image.SizeX * Image.SizeY);
-            for (int Y = 0; Y < Image.SizeY; Y++)
+        tmpData.Reserve(ResizedImage.SizeX * ResizedImage.SizeY);
+    
+        for (int Y = 0; Y < ResizedImage.SizeY; Y++) 
         {
-            for (int X = 0; X < Image.SizeX; X++)
+            for (int X = 0; X < ResizedImage.SizeX; X++)
             {
-                tmpData.Add(Image.GetOnePixelLinear(X, Y));
+                tmpData.Add(ResizedImage.GetOnePixelLinear(X, Y));
             }
         }
         OutData = tmpData;

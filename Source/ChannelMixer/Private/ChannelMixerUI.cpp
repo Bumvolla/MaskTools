@@ -4,6 +4,8 @@
 #include "ChannelMixerUI.h"
 #include "ChannelMixer.h"
 #include "ChannelMixerUtils.h"
+#include "MaskToolsConfig.h"
+
 #include "Widgets/SWindow.h"
 #include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
@@ -40,10 +42,10 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
         [
             SNew(SUniformGridPanel)
                 .SlotPadding(FMargin(5))
-                + SUniformGridPanel::Slot(0, 0)[CreateChannelWidget("Red", Mixer->RedChannelSImage, &Mixer->RedTexture, Mixer)]
-                + SUniformGridPanel::Slot(1, 0)[CreateChannelWidget("Green", Mixer->GreenChannelSImage, &Mixer->GreenTexture, Mixer)]
-                + SUniformGridPanel::Slot(2, 0)[CreateChannelWidget("Blue", Mixer->BlueChannelSImage, &Mixer->BlueTexture, Mixer)]
-                + SUniformGridPanel::Slot(3, 0)[CreateChannelWidget("Alpha", Mixer->AlphaChannelSImage, &Mixer->AlphaTexture, Mixer)]
+                + SUniformGridPanel::Slot(0, 0)[CreateChannelWidget("Red", EChannelMixerChannel::Red, Mixer->RedChannelSImage, Mixer)]
+                + SUniformGridPanel::Slot(1, 0)[CreateChannelWidget("Green", EChannelMixerChannel::Green,Mixer->GreenChannelSImage, Mixer)]
+                + SUniformGridPanel::Slot(2, 0)[CreateChannelWidget("Blue", EChannelMixerChannel::Blue,Mixer->BlueChannelSImage, Mixer)]
+                + SUniformGridPanel::Slot(3, 0)[CreateChannelWidget("Alpha", EChannelMixerChannel::Alpha,Mixer->AlphaChannelSImage, Mixer)]
         ]
         // Preview image area.
         + SVerticalBox::Slot()
@@ -95,7 +97,7 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
 
 }
 
-TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelName, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture, FChannelMixer* Mixer)
+TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelName, EChannelMixerChannel Channel, TSharedPtr<SImage>& ChannelImage, FChannelMixer* Mixer)
 {
     ChannelImage = SNew(SImage);
     return SNew(SVerticalBox)
@@ -125,9 +127,9 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                 [
                     SNew(SButton)
                         .Text(FText::FromString(TEXT("Import")))
-                        .OnClicked_Lambda([ChannelName, &ChannelImage, ChannelTexture, Mixer]() -> FReply
+                        .OnClicked_Lambda([Channel, Mixer]() -> FReply
                         {
-                            return Mixer->ImportTextureFromCB(ChannelName, ChannelImage, ChannelTexture);
+                            return Mixer->ImportTextureFromCB(Channel);
                         })
 
                 ]
@@ -136,9 +138,9 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                 [
                     SNew(SButton)
                         .ToolTipText(FText::FromString(TEXT("Reset to default")))
-                        .OnClicked_Lambda([ChannelName, &ChannelImage, ChannelTexture, Mixer]() -> FReply
+                        .OnClicked_Lambda([Channel, Mixer]() -> FReply
                             {
-                                return Mixer->RestoreSlotDefaultTexture(ChannelName, ChannelImage, *ChannelTexture);
+                                return Mixer->RestoreSlotDefaultTexture(Channel);
                             })
                         [
                             SNew(SImage).Image(FAppStyle::GetBrush("GenericCommands.Undo"))
@@ -261,13 +263,7 @@ void STexResComboBox::OnSelectionChanged(TSharedPtr<FString> NewSelection, ESele
     int32 newSize = FChannelMixerUtils::ResFinder(*NewSelection.Get());
     Mixer->TextureResolution = newSize;
 
-    UWorld* World = GEditor->GetEditorWorldContext().World();
-    auto NewRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, newSize, newSize);
-
-    Mixer->CombinedTexture = NewRT;
-    Mixer->PreviewBrush->SetResourceObject(NewRT);
-
-    Mixer->UpdatePreviewTexture();
+    Mixer->RegeneratePreviewTexture();
 }
 
 TSharedRef<SWidget> STexResComboBox::MakeWidgetForOption(TSharedPtr<FString> InOption)

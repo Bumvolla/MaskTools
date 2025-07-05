@@ -4,13 +4,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Logging.h"
-#include "Modules/ModuleManager.h"
-#include "Interfaces/IPluginManager.h"
-#include "Framework/MultiBox/MultiBoxExtender.h"
-#include "EnchancedEditorLogging/Public/EnchancedNotifications.h"
 
-#include "MaskTools/Public/MaskToolsConfig.h"
+#include "ChannelMixerEnums.h"
+#include "Modules/ModuleManager.h"
+#include "Framework/MultiBox/MultiBoxExtender.h"
+
+#include "Logging.h"
 
 /**
  * Main module class that holds state and initializes the texture mixer.
@@ -24,10 +23,19 @@ public:
     virtual void ShutdownModule() override;
 
     // Slate images
+    TSharedPtr<FSlateBrush> RedBrush;
     TSharedPtr<SImage> RedChannelSImage;
+
+    TSharedPtr<FSlateBrush> GreenBrush;
     TSharedPtr<SImage> GreenChannelSImage;
+
+    TSharedPtr<FSlateBrush> BlueBrush;
     TSharedPtr<SImage> BlueChannelSImage;
+
+    TSharedPtr<FSlateBrush> AlphaBrush;
     TSharedPtr<SImage> AlphaChannelSImage;
+
+    TSharedPtr<FSlateBrush> PreviewBrush;
     TSharedPtr<SImage> PreviewSImage;
 
     // Editor textures references
@@ -38,11 +46,6 @@ public:
     UTexture2D* PreviewTexture;
 
     UTexture2D* FallbackTexture;
-
-    // Global resources used for the final mask preview
-    UTextureRenderTarget2D* CombinedTexture;
-    TSharedPtr<FSlateBrush> PreviewBrush;
-    UMaterialInstanceDynamic* BlendMaterial;
 
     // Final mask package settings
     FString TexturePrefix;
@@ -56,13 +59,18 @@ public:
     FString NameHintText = TEXT("GeneratedMask");
     FString SuffixHintText = TEXT("Mask");
 
-    void UpdatePreviewTexture();
-
     FReply ExportTexture();
 
-    FReply RestoreSlotDefaultTexture(const FString& ChannelName, TSharedPtr<SImage> SlateImage, UTexture2D* Texture);
+    FReply RestoreSlotDefaultTexture(EChannelMixerChannel Channel);
+    void SetNewChannelTexture(UTexture2D* NewTexture, EChannelMixerChannel Channel);
 
-    FReply ImportTextureFromCB(const FString& ChannelName, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture);
+    FReply ImportTextureFromCB(EChannelMixerChannel Channel);
+
+    void RegeneratePreviewTexture();
+    void RegeneratePreviewTexturePixelData();
+    void RegeneratePreviewTextureMaterial();
+
+    void UpdateSlateChannel(EChannelMixerChannel Channel);
 
 
 private:
@@ -71,7 +79,4 @@ private:
     void OpenTextureMixerWindow();
 
     FString BuildPackagePath();
-
-    void CreateAndSetPreviewBrush(UTexture2D* NewTexture, UTexture2D** ChannelTexture, TSharedPtr<SImage>& ChannelImage);
-    void SetTextureParameterValue(const FString& ChannelName, UTexture2D* NewTexture);
 };

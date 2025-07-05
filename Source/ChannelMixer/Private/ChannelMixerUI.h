@@ -16,7 +16,8 @@ struct FChannelMixerUI
 
     static TSharedRef<SWindow> BuildMainWindow();
     static TSharedRef<SWidget> CreateMainLayout(FChannelMixer* Mixer);
-    static TSharedRef<SWidget> CreateChannelWidget(const FString& ChannelName, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture, FChannelMixer* Mixer);
+    static TSharedRef<SWidget> CreateChannelWidget(const ::FString& ChannelName, ::EChannelMixerChannel Channel, TSharedPtr<SImage>& ChannelImage, FChannelMixer
+                                                   * Mixer);
     static float FindDesiredSizeKeepRatio();
     static TSharedRef<SWidget> CreateNameConfigWidget(const FString& Name, const FString& ToolTip, const FString& HintText, FString& ChangedText, FChannelMixer* Mixer);
     static TSharedRef<SWidget> CreateTexResSelectionComboBox(FChannelMixer* Mixer);
