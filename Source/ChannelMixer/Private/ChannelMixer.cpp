@@ -125,7 +125,7 @@ FString FChannelMixer::BuildPackagePath()
         else tempSuffix = TEXT("");
     }
     else 
-        tempSuffix = FString::Printf(TEXT("%s_"), *TextureSuffix);
+        tempSuffix = FString::Printf(TEXT("_%s"), *TextureSuffix);
 
     FString AssetName = FString::Printf(TEXT("%s%s%s"), *tempPrefix, *tempName, *tempSuffix);
     FString PackageName = FString::Printf(TEXT("/Game/%s/%s"), *ExportPath, *AssetName);
