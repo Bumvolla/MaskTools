@@ -30,6 +30,8 @@ TSharedRef<SWindow> FChannelMixerUI::BuildMainWindow()
         .ClientSize(FVector2D(1000, 800))
         .SupportsMinimize(true)
         .SupportsMaximize(false)
+        .FocusWhenFirstShown(true)
+        .CreateTitleBar(true)
         .IsTopmostWindow(true);
 }
 

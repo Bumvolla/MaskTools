@@ -77,6 +77,8 @@ private:
     void InitToolsMenuExtension();
     void AddToolsMenuEntry(FMenuBuilder& MenuBuilder);
     void OpenTextureMixerWindow();
+    UTexture2D* GetChannelTexture(EChannelMixerChannel Channel);
 
     FString BuildPackagePath();
+    bool bIsImporting = false;
 };

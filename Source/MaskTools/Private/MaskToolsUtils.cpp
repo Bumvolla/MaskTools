@@ -22,8 +22,7 @@ using ::FMaskToolsPrivateHelpers;
 void FMaskToolsUtils::ForceTextureCompilation(UTexture2D* Texture)
 {
     FTextureCompilingManager::Get().FinishCompilation({ Texture });
-    Texture->SetForceMipLevelsToBeResident(30.f);
-    Texture->WaitForStreaming(true);
+    Texture->SetForceMipLevelsToBeResident(1.f);
 }
 
 TArray<UTexture2D*> FMaskToolsUtils::SyncronousLoadCBTextures()

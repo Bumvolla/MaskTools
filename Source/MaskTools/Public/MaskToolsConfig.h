@@ -24,8 +24,9 @@ public:
 	/*
 	Sample
 	*/
-	UPROPERTY(EditAnywhere, config, Category = "Texture Mixer")
-	EMaskCreationMethod MixerCreationMethod;
+
+	// UPROPERTY(EditAnywhere, config, Category = "Texture Mixer")
+	// EMaskCreationMethod MixerCreationMethod;
 
 	/*
 	Sample

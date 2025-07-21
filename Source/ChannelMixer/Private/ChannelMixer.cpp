@@ -7,6 +7,8 @@
 #include "ChannelMixerUtils.h"
 #include "MaskToolsUtils.h"
 
+#include "ChannelMixerEnums.h"
+
 #include "Modules/ModuleManager.h"
 #include "LevelEditor.h"
 
@@ -96,9 +98,15 @@ void FChannelMixer::OpenTextureMixerWindow()
     // Create default values
     FallbackTexture = FChannelMixerUtils::CreateFallbackTexture();
     FallbackTexture->AddToRoot();
+
     
     // Show main window
     FChannelMixerUI::ShowTextureMixerWindow(this);
+    
+    RestoreSlotDefaultTexture(EChannelMixerChannel::Red);
+    RestoreSlotDefaultTexture(EChannelMixerChannel::Green);
+    RestoreSlotDefaultTexture(EChannelMixerChannel::Blue);
+    RestoreSlotDefaultTexture(EChannelMixerChannel::Alpha);
 
 }
 
@@ -141,8 +149,15 @@ FReply FChannelMixer::ImportTextureFromCB(EChannelMixerChannel Channel)
     TArray<UTexture2D*> SelectedTextures = FMaskToolsUtils::SyncronousLoadCBTextures();
     if (SelectedTextures.Num() == 1)
     {
-        UTexture2D* SelectedTexture = SelectedTextures[0];   
-        SetNewChannelTexture(SelectedTexture, Channel);
+        if (IsValid(SelectedTextures[0]) && SelectedTextures[0] != GetChannelTexture(Channel))
+        {
+            UTexture2D* SelectedTexture = SelectedTextures[0];   
+            SetNewChannelTexture(SelectedTexture, Channel);
+        }
+        else
+        {
+            return FReply::Unhandled();
+        }
     }
     else
     {
@@ -155,8 +170,10 @@ FReply FChannelMixer::ImportTextureFromCB(EChannelMixerChannel Channel)
 
 void FChannelMixer::RegeneratePreviewTexture()
 {
-    const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
-    switch (Config->MixerCreationMethod)
+    // const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+    // switch (Config->MixerCreationMethod)
+    EMaskCreationMethod TempFixedMethod = EMaskCreationMethod::PixelData;
+    switch (TempFixedMethod)
     {
         case EMaskCreationMethod::PixelData:
             RegeneratePreviewTexturePixelData();
@@ -195,6 +212,7 @@ void FChannelMixer::RegeneratePreviewTexturePixelData()
             ChannelData.Add(FColor(Color.R, 0 ,0 ,0));
         }
     };
+    
     GetTextureChannelData(RedTexture, RChannel);
     GetTextureChannelData(GreenTexture, GChannel);
     GetTextureChannelData(BlueTexture, BChannel);
@@ -252,6 +270,11 @@ void FChannelMixer::RegeneratePreviewTextureMaterial()
     CombinedTexture->AddToRoot();
     PreviewBrush->SetResourceObject(CombinedTexture);
 
+    if (RedTexture) RedTexture->UpdateResource();
+    if (GreenTexture) GreenTexture->UpdateResource();  
+    if (BlueTexture) BlueTexture->UpdateResource();
+    if (AlphaTexture) AlphaTexture->UpdateResource();
+
     BlendMaterial->SetTextureParameterValue(FName("Red"), RedTexture);
     BlendMaterial->SetTextureParameterValue(FName("Green"), GreenTexture);
     BlendMaterial->SetTextureParameterValue(FName("Blue"), BlueTexture);
@@ -299,6 +322,34 @@ void FChannelMixer::UpdateSlateChannel(EChannelMixerChannel Channel)
         break;
     default:
         UE_LOG(LogChannelMixer, Warning, TEXT("No selected slate channel to update"))
+    }
+    
+    FSlateApplication::Get().Tick();
+    
+}
+
+UTexture2D* FChannelMixer::GetChannelTexture(EChannelMixerChannel Channel)
+{
+    switch (Channel)
+    {
+    case EChannelMixerChannel::Red:
+        return RedTexture;
+        
+    case EChannelMixerChannel::Green:
+        return GreenTexture;
+        
+    case EChannelMixerChannel::Blue:
+        return BlueTexture;
+        
+    case EChannelMixerChannel::Alpha:
+        return AlphaTexture;
+        
+    case EChannelMixerChannel::Result:
+        return PreviewTexture;
+        
+    default:
+        UE_LOG(LogChannelMixer, Warning, TEXT("No selected slate channel to update"))
+        return nullptr;
     }
 }
 
