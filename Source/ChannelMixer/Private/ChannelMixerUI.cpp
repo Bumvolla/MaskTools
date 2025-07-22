@@ -4,6 +4,8 @@
 #include "ChannelMixerUI.h"
 #include "ChannelMixer.h"
 #include "ChannelMixerUtils.h"
+#include "ContentBrowserModule.h"
+#include "IContentBrowserSingleton.h"
 #include "MaskToolsConfig.h"
 
 #include "Widgets/SWindow.h"
@@ -218,6 +220,28 @@ TSharedRef<SWidget> FChannelMixerUI::CreateTexResSelectionComboBox(FChannelMixer
 
                 ]
         ];
+}
+
+TSharedRef<SWidget> FChannelMixerUI::CreateContentBrowser(FChannelMixer* Mixer)
+{
+
+    FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+    
+    static int32 BrowserInstanceId = 1;
+    FName BrowserInstanceName = *FString::Printf(TEXT("ChannelMixerContentBrowser_%d"), BrowserInstanceId++);
+
+    FContentBrowserConfig ContentBrowserConfig;
+    ContentBrowserConfig.bCanShowFilters = true;
+    ContentBrowserConfig.bCanShowClasses = false;
+    
+
+    TSharedRef<SWidget> FullContentBrowser = ContentBrowserModule.Get().CreateContentBrowser(
+        BrowserInstanceName,
+        nullptr,
+        &ContentBrowserConfig
+    );
+
+    return FullContentBrowser;
 }
 
 void STexResComboBox::Construct(const FArguments& InArgs)

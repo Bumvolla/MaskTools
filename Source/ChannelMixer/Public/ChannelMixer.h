@@ -4,12 +4,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
-#include "ChannelMixerEnums.h"
-#include "Modules/ModuleManager.h"
-#include "Framework/MultiBox/MultiBoxExtender.h"
-
 #include "Logging.h"
+#include "ChannelMixerEnums.h"
 
 /**
  * Main module class that holds state and initializes the texture mixer.
@@ -72,7 +68,11 @@ public:
 
     void UpdateSlateChannel(EChannelMixerChannel Channel);
 
-
+    FReply ToggleContentBrowser();
+    
+    TSharedPtr<SBox> ContentBrowserBox;
+    
+    
 private:
     void InitToolsMenuExtension();
     void AddToolsMenuEntry(FMenuBuilder& MenuBuilder);
@@ -80,5 +80,5 @@ private:
     UTexture2D* GetChannelTexture(EChannelMixerChannel Channel);
 
     FString BuildPackagePath();
-    bool bIsImporting = false;
+    
 };

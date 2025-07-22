@@ -328,6 +328,20 @@ void FChannelMixer::UpdateSlateChannel(EChannelMixerChannel Channel)
     
 }
 
+FReply FChannelMixer::ToggleContentBrowser()
+{
+    if (!ContentBrowserBox.IsValid())
+    {
+        return FReply::Handled();
+    }
+
+    const EVisibility CurrentVisibility = ContentBrowserBox->GetVisibility();
+    const bool bShouldShow = (CurrentVisibility != EVisibility::Visible);
+
+    ContentBrowserBox->SetVisibility(bShouldShow ? EVisibility::Visible : EVisibility::Collapsed);
+    return FReply::Handled();
+}
+
 UTexture2D* FChannelMixer::GetChannelTexture(EChannelMixerChannel Channel)
 {
     switch (Channel)

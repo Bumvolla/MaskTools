@@ -21,6 +21,7 @@ struct FChannelMixerUI
     static float FindDesiredSizeKeepRatio();
     static TSharedRef<SWidget> CreateNameConfigWidget(const FString& Name, const FString& ToolTip, const FString& HintText, FString& ChangedText, FChannelMixer* Mixer);
     static TSharedRef<SWidget> CreateTexResSelectionComboBox(FChannelMixer* Mixer);
+    static TSharedRef<SWidget> CreateContentBrowser(FChannelMixer* Mixer);
     
 };
 
