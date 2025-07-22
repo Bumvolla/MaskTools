@@ -259,7 +259,7 @@ void FChannelMixer::RegeneratePreviewTextureMaterial()
     UMaterialInterface* BaseMaterial = FMaskToolsPrivateHelpers::LoadPluginMaterial(TEXT("MM_TextureMixer"));
     if (BaseMaterial == nullptr)
     {
-        UE_LOG(LogChannelMixer, Error, TEXT("Failed to load texture mixer material, make sure you got the necesary content"));
+        UE_LOG(LogChannelMixer, Error, TEXT("Failed to load texture mixer material, make sure you got the necessary content"));
         return;
     }
     
