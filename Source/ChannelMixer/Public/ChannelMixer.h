@@ -76,7 +76,9 @@ public:
 private:
     void InitToolsMenuExtension();
     void AddToolsMenuEntry(FMenuBuilder& MenuBuilder);
+    void InitializeData();
     void OpenTextureMixerWindow();
+    TSharedRef<SDockTab> SpawnTextureMixerTab(const FSpawnTabArgs& Args);
     UTexture2D* GetChannelTexture(EChannelMixerChannel Channel);
 
     FString BuildPackagePath();

@@ -7,6 +7,7 @@
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
 #include "MaskToolsConfig.h"
+#include "Editor/ContentBrowser/Private/SContentBrowser.h"
 
 #include "Widgets/SWindow.h"
 #include "Widgets/Layout/SScaleBox.h"
@@ -20,21 +21,7 @@
 
 void FChannelMixerUI::ShowTextureMixerWindow(FChannelMixer* Mixer)
 {
-    TSharedRef<SWindow> TextureMixerWindow = BuildMainWindow();
-    TextureMixerWindow->SetContent(CreateMainLayout(Mixer));
-    FSlateApplication::Get().AddWindow(TextureMixerWindow);
-}
-
-TSharedRef<SWindow> FChannelMixerUI::BuildMainWindow()
-{
-    return SNew(SWindow)
-        .Title(FText::FromString("Texture Mixer"))
-        .ClientSize(FVector2D(1000, 800))
-        .SupportsMinimize(true)
-        .SupportsMaximize(false)
-        .FocusWhenFirstShown(true)
-        .CreateTitleBar(true)
-        .IsTopmostWindow(true);
+    FGlobalTabmanager::Get()->TryInvokeTab(FTabId("TextureMixerTab"));
 }
 
 TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
@@ -91,13 +78,39 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
         + SVerticalBox::Slot()
         .AutoHeight()
         [
-            SNew(SButton)
-                .Text(FText::FromString(TEXT("Export")))
+            SNew(SHorizontalBox)
+                + SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+            [
+                SNew(SButton)
+                    .Text(FText::FromString(TEXT("Export")))
+                    .OnClicked_Lambda([Mixer]() -> FReply
+                    {
+                        return Mixer->ExportTexture();
+                    })
+            ]
+            + SHorizontalBox::Slot()
+            .FillWidth(0.1f)
+            [
+                SNew(SButton)
+                .Text(FText::FromString(TEXT("Content Drawer")))
                 .OnClicked_Lambda([Mixer]() -> FReply
                 {
-                    return Mixer->ExportTexture();
+                    return Mixer->ToggleContentBrowser();
                 })
-        ];
+            ]
+        ]
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        .MaxHeight(500)
+        .Padding(4)
+        [
+         SAssignNew(Mixer->ContentBrowserBox, SBox)
+         .Visibility(EVisibility::Visible)
+         [
+             CreateContentBrowser(Mixer)
+         ]
+ ];
 
 }
 
@@ -234,13 +247,12 @@ TSharedRef<SWidget> FChannelMixerUI::CreateContentBrowser(FChannelMixer* Mixer)
     ContentBrowserConfig.bCanShowFilters = true;
     ContentBrowserConfig.bCanShowClasses = false;
     
-
     TSharedRef<SWidget> FullContentBrowser = ContentBrowserModule.Get().CreateContentBrowser(
         BrowserInstanceName,
         nullptr,
         &ContentBrowserConfig
     );
-
+    
     return FullContentBrowser;
 }
 

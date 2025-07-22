@@ -28,10 +28,19 @@ void FChannelMixer::StartupModule()
     InitToolsMenuExtension();
 
     ChannelMixerStyle::InitializeIcons();
+
+    FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+        "TextureMixerTab",
+        FOnSpawnTab::CreateRaw(this, &FChannelMixer::SpawnTextureMixerTab))
+        .SetDisplayName(NSLOCTEXT("ChannelMixer", "Channel Mixer", "Channel Mixer"))
+        .SetMenuType(ETabSpawnerMenuType::Hidden)
+        .SetIcon(FSlateIcon(ChannelMixerStyle::GetStyleSetName(), "Tools.MixChannels"));
 }
 
 void FChannelMixer::ShutdownModule()
 {
+    FGlobalTabmanager::Get()->UnregisterNomadTabSpawner("TextureMixerTab");
+    
     ChannelMixerStyle::ShutDown();
 }
 
@@ -66,9 +75,8 @@ void FChannelMixer::AddToolsMenuEntry(FMenuBuilder& MenuBuilder)
     );
 }
 
-void FChannelMixer::OpenTextureMixerWindow()
+void FChannelMixer::InitializeData()
 {
-
     // Retrieve config from project settings
     const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
 
@@ -86,9 +94,7 @@ void FChannelMixer::OpenTextureMixerWindow()
     const UEnum* EnumPtr = StaticEnum<EMaskResolutions>();
     FText defaultResString = EnumPtr->GetDisplayNameTextByValue(static_cast<int64>(Config->DefaultMaskResolution));
     TextureResolution = FChannelMixerUtils::ResFinder(defaultResString.ToString());
-
     
-
     RedBrush = MakeShared<FSlateBrush>();
     GreenBrush = MakeShared<FSlateBrush>();
     BlueBrush = MakeShared<FSlateBrush>();
@@ -105,13 +111,23 @@ void FChannelMixer::OpenTextureMixerWindow()
     AlphaTexture = FallbackTexture;
 }
 
-    FChannelMixerUI::ShowTextureMixerWindow(this);
-    
-    RestoreSlotDefaultTexture(EChannelMixerChannel::Red);
-    RestoreSlotDefaultTexture(EChannelMixerChannel::Green);
-    RestoreSlotDefaultTexture(EChannelMixerChannel::Blue);
-    RestoreSlotDefaultTexture(EChannelMixerChannel::Alpha);
+void FChannelMixer::OpenTextureMixerWindow()
+{
 
+    FChannelMixerUI::ShowTextureMixerWindow(this);
+
+}
+
+TSharedRef<SDockTab> FChannelMixer::SpawnTextureMixerTab(const FSpawnTabArgs& Args)
+{
+    InitializeData();
+    
+    return SNew(SDockTab)
+        .TabRole(ETabRole::NomadTab)
+        .Label(NSLOCTEXT("ChannelMixer", "TextureMixerTabTitle", "Texture Mixer"))
+        [
+            FChannelMixerUI::CreateMainLayout(this)
+        ];
 }
 
 FString FChannelMixer::BuildPackagePath()
