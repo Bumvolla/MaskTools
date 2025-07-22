@@ -99,8 +99,12 @@ void FChannelMixer::OpenTextureMixerWindow()
     FallbackTexture = FChannelMixerUtils::CreateFallbackTexture();
     FallbackTexture->AddToRoot();
 
-    
-    // Show main window
+    RedTexture = FallbackTexture;
+    GreenTexture = FallbackTexture;
+    BlueTexture = FallbackTexture;
+    AlphaTexture = FallbackTexture;
+}
+
     FChannelMixerUI::ShowTextureMixerWindow(this);
     
     RestoreSlotDefaultTexture(EChannelMixerChannel::Red);
@@ -249,6 +253,7 @@ void FChannelMixer::RegeneratePreviewTexturePixelData()
     UWorld* World = GEditor->GetEditorWorldContext().World();
     UTexture2D* NewTexture = FImageUtils::CreateTexture2D(TextureResolution, TextureResolution, FinalTextureData, World, TEXT(""), EObjectFlags::RF_KeepForCooker, TextureParameters);
     PreviewTexture = NewTexture;
+    FMaskToolsUtils::ForceTextureCompilation(PreviewTexture);
     UpdateSlateChannel(EChannelMixerChannel::Result);
 }
 

@@ -17,12 +17,18 @@
 #include "Interfaces/IPluginManager.h"
 #include "Logging.h"
 
-using ::FMaskToolsPrivateHelpers;
-
 void FMaskToolsUtils::ForceTextureCompilation(UTexture2D* Texture)
 {
+    FScopedSlowTask ForceTextureCompilationTask(1.f, FText::FromString("Forcing texture compilation..."));
+    ForceTextureCompilationTask.MakeDialog();
+    
     FTextureCompilingManager::Get().FinishCompilation({ Texture });
     Texture->SetForceMipLevelsToBeResident(1.f);
+    if (!Texture->IsFullyStreamedIn() && Texture->IsStreamable())
+    {
+        Texture->WaitForPendingInitOrStreaming(true);
+    }
+    
 }
 
 TArray<UTexture2D*> FMaskToolsUtils::SyncronousLoadCBTextures()
