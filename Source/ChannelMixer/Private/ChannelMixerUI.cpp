@@ -4,6 +4,11 @@
 #include "ChannelMixerUI.h"
 #include "ChannelMixer.h"
 #include "ChannelMixerUtils.h"
+#include "ContentBrowserModule.h"
+#include "IContentBrowserSingleton.h"
+#include "MaskToolsConfig.h"
+#include "Editor/ContentBrowser/Private/SContentBrowser.h"
+
 #include "Widgets/SWindow.h"
 #include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
@@ -16,19 +21,7 @@
 
 void FChannelMixerUI::ShowTextureMixerWindow(FChannelMixer* Mixer)
 {
-    TSharedRef<SWindow> TextureMixerWindow = BuildMainWindow();
-    TextureMixerWindow->SetContent(CreateMainLayout(Mixer));
-    FSlateApplication::Get().AddWindow(TextureMixerWindow);
-}
-
-TSharedRef<SWindow> FChannelMixerUI::BuildMainWindow()
-{
-    return SNew(SWindow)
-        .Title(FText::FromString("Texture Mixer"))
-        .ClientSize(FVector2D(1000, 800))
-        .SupportsMinimize(true)
-        .SupportsMaximize(false)
-        .IsTopmostWindow(true);
+    FGlobalTabmanager::Get()->TryInvokeTab(FTabId("TextureMixerTab"));
 }
 
 TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
@@ -40,10 +33,10 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
         [
             SNew(SUniformGridPanel)
                 .SlotPadding(FMargin(5))
-                + SUniformGridPanel::Slot(0, 0)[CreateChannelWidget("Red", Mixer->RedChannelSImage, &Mixer->RedTexture, Mixer)]
-                + SUniformGridPanel::Slot(1, 0)[CreateChannelWidget("Green", Mixer->GreenChannelSImage, &Mixer->GreenTexture, Mixer)]
-                + SUniformGridPanel::Slot(2, 0)[CreateChannelWidget("Blue", Mixer->BlueChannelSImage, &Mixer->BlueTexture, Mixer)]
-                + SUniformGridPanel::Slot(3, 0)[CreateChannelWidget("Alpha", Mixer->AlphaChannelSImage, &Mixer->AlphaTexture, Mixer)]
+                + SUniformGridPanel::Slot(0, 0)[CreateChannelWidget("Red", EChannelMixerChannel::Red, Mixer->RedChannelSImage, Mixer)]
+                + SUniformGridPanel::Slot(1, 0)[CreateChannelWidget("Green", EChannelMixerChannel::Green,Mixer->GreenChannelSImage, Mixer)]
+                + SUniformGridPanel::Slot(2, 0)[CreateChannelWidget("Blue", EChannelMixerChannel::Blue,Mixer->BlueChannelSImage, Mixer)]
+                + SUniformGridPanel::Slot(3, 0)[CreateChannelWidget("Alpha", EChannelMixerChannel::Alpha,Mixer->AlphaChannelSImage, Mixer)]
         ]
         // Preview image area.
         + SVerticalBox::Slot()
@@ -85,18 +78,79 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
         + SVerticalBox::Slot()
         .AutoHeight()
         [
-            SNew(SButton)
-                .Text(FText::FromString(TEXT("Export")))
-                .OnClicked_Lambda([Mixer]() -> FReply
-                {
-                    return Mixer->ExportTexture();
-                })
-        ];
+            SNew(SHorizontalBox)
+                + SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+            [
+                SNew(SButton)
+                    .Text(FText::FromString(TEXT("Export")))
+                    .OnClicked_Lambda([Mixer]() -> FReply
+                    {
+                        return Mixer->ExportTexture();
+                    })
+            ]
+            + SHorizontalBox::Slot()
+           .FillWidth(0.1f)
+           [
+               SNew(SButton)
+               .OnClicked_Lambda([Mixer]() -> FReply
+               {
+                   return Mixer->ToggleContentBrowser();
+               })
+               [
+                   SNew(SHorizontalBox)
+                   + SHorizontalBox::Slot()
+                   .AutoWidth()
+                   .VAlign(VAlign_Center)
+                   [
+                       SNew(SImage)
+                       .Image(FAppStyle::GetBrush("LevelEditor.OpenContentBrowser"))
+                   ]
+                   + SHorizontalBox::Slot()
+                   .VAlign(VAlign_Center)
+                   .Padding(FMargin(5, 0, 0, 0))
+                   [
+                       SNew(STextBlock)
+                       .Text(FText::FromString(TEXT("Content Drawer")))
+                   ]
+               ]
+           ]
+        ]
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        .MaxHeight(500)
+        .Padding(4)
+        [
+         SAssignNew(Mixer->ContentBrowserBox, SBox)
+         .Visibility(EVisibility::Collapsed)
+         [
+             CreateContentBrowser(Mixer)
+         ]
+ ];
 
 }
 
-TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelName, TSharedPtr<SImage>& ChannelImage, UTexture2D** ChannelTexture, FChannelMixer* Mixer)
+TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelName, EChannelMixerChannel Channel, TSharedPtr<SImage>& ChannelImage, FChannelMixer* Mixer)
 {
+    EChannelMixerTextureChannel newChannel;
+    switch (Channel)
+    {
+    case EChannelMixerChannel::Red:
+        newChannel = EChannelMixerTextureChannel::Red;
+        break;
+    case EChannelMixerChannel::Green:
+        newChannel = EChannelMixerTextureChannel::Green;
+        break;
+    case EChannelMixerChannel::Blue:
+        newChannel = EChannelMixerTextureChannel::Blue;
+        break;
+    case EChannelMixerChannel::Alpha:
+        newChannel = EChannelMixerTextureChannel::Alpha;
+        break;
+    default:
+        newChannel = EChannelMixerTextureChannel::Red;
+    }
+    
     ChannelImage = SNew(SImage);
     return SNew(SVerticalBox)
         + SVerticalBox::Slot()
@@ -125,9 +179,9 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                 [
                     SNew(SButton)
                         .Text(FText::FromString(TEXT("Import")))
-                        .OnClicked_Lambda([ChannelName, &ChannelImage, ChannelTexture, Mixer]() -> FReply
+                        .OnClicked_Lambda([Channel, Mixer]() -> FReply
                         {
-                            return Mixer->ImportTextureFromCB(ChannelName, ChannelImage, ChannelTexture);
+                            return Mixer->TryImportTexture(Channel);
                         })
 
                 ]
@@ -136,15 +190,34 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                 [
                     SNew(SButton)
                         .ToolTipText(FText::FromString(TEXT("Reset to default")))
-                        .OnClicked_Lambda([ChannelName, &ChannelImage, ChannelTexture, Mixer]() -> FReply
+                        .OnClicked_Lambda([Channel, Mixer]() -> FReply
                             {
-                                return Mixer->RestoreSlotDefaultTexture(ChannelName, ChannelImage, *ChannelTexture);
+                                return Mixer->RestoreSlotDefaultTexture(Channel);
                             })
                         [
                             SNew(SImage).Image(FAppStyle::GetBrush("GenericCommands.Undo"))
                         ]
 
                 ]
+            +SHorizontalBox::Slot()
+                .AutoWidth()
+                [
+                    SNew(SButton)
+                        .ToolTipText(FText::FromString(TEXT("Browse to asset")))
+                        .OnClicked_Lambda([Channel, Mixer]() -> FReply
+                            {
+                                return Mixer->BrowseToAsset(Channel);
+                            })
+                        [
+                            SNew(SImage).Image(FAppStyle::GetBrush("LevelEditor.OpenContentBrowser"))
+                        ]
+
+                ]
+        ]
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            CreateTextureChannelSelectionComboBox(Mixer, newChannel)
         ];
 }
 
@@ -216,6 +289,54 @@ TSharedRef<SWidget> FChannelMixerUI::CreateTexResSelectionComboBox(FChannelMixer
         ];
 }
 
+TSharedRef<SWidget> FChannelMixerUI::CreateTextureChannelSelectionComboBox(FChannelMixer* Mixer, EChannelMixerTextureChannel Channel)
+{
+    return SNew(SBorder)
+        .BorderBackgroundColor(FLinearColor::Black)
+        [
+            SNew(SVerticalBox)
+                + SVerticalBox::Slot()
+                .AutoHeight()
+                [
+                    SNew(SBox)
+                        .HeightOverride(30)
+                        [
+                            SNew(SChannelSelectionComboBox)
+                                .ToolTipText(FText::FromString(TEXT("Selected channel")))
+                                .Mixer(Mixer)
+                                .Channel(Channel)
+                        ]
+
+                ]
+        ];
+}
+
+TSharedRef<SWidget> FChannelMixerUI::CreateContentBrowser(FChannelMixer* Mixer)
+{
+
+    FARFilter Filter;
+    Filter.ClassPaths.Add(UTexture2D::StaticClass()->GetClassPathName());
+    
+    FAssetPickerConfig AssetPickerConfig;
+    AssetPickerConfig.bCanShowFolders = true;
+    AssetPickerConfig.Filter = Filter;
+    AssetPickerConfig.bCanShowClasses = false;
+    AssetPickerConfig.bForceShowEngineContent = false;
+    AssetPickerConfig.bShowPathInColumnView = true;
+    AssetPickerConfig.bSortByPathInColumnView = true;
+    
+    AssetPickerConfig.OnAssetSelected = FOnAssetSelected::CreateLambda(
+        [Mixer](const FAssetData& SelectedAsset)
+        {
+            Mixer->SetSelectedAsset(SelectedAsset);
+        });
+    
+    FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+    TSharedRef<SWidget> FullContentBrowser = ContentBrowserModule.Get().CreateAssetPicker(AssetPickerConfig);
+    
+    return FullContentBrowser;
+}
+
 void STexResComboBox::Construct(const FArguments& InArgs)
 {
 
@@ -245,8 +366,7 @@ void STexResComboBox::Construct(const FArguments& InArgs)
                 .Content()
                 [SNew(STextBlock).Text(this, &STexResComboBox::GetComboBoxSelection)]
         ];
-
-
+    
 }
 
 void STexResComboBox::OnSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
@@ -261,13 +381,7 @@ void STexResComboBox::OnSelectionChanged(TSharedPtr<FString> NewSelection, ESele
     int32 newSize = FChannelMixerUtils::ResFinder(*NewSelection.Get());
     Mixer->TextureResolution = newSize;
 
-    UWorld* World = GEditor->GetEditorWorldContext().World();
-    auto NewRT = UKismetRenderingLibrary::CreateRenderTarget2D(World, newSize, newSize);
-
-    Mixer->CombinedTexture = NewRT;
-    Mixer->PreviewBrush->SetResourceObject(NewRT);
-
-    Mixer->UpdatePreviewTexture();
+    Mixer->RegeneratePreviewTexture();
 }
 
 TSharedRef<SWidget> STexResComboBox::MakeWidgetForOption(TSharedPtr<FString> InOption)
@@ -276,6 +390,71 @@ TSharedRef<SWidget> STexResComboBox::MakeWidgetForOption(TSharedPtr<FString> InO
 }
 
 FText STexResComboBox::GetComboBoxSelection() const
+{
+    return FText::FromString(*SelectedOption);
+}
+
+void SChannelSelectionComboBox::Construct(const FArguments& InArgs)
+{
+    Mixer = InArgs._Mixer;
+    Channel = InArgs._Channel;
+
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("Red")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("Green")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("Blue")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("Alpha")));
+
+    SelectedOption = ComboBoxOptions[0];
+
+    ChildSlot
+        [
+            SNew(SComboBox<TSharedPtr<FString>>)
+                .OptionsSource(&ComboBoxOptions)
+                .OnSelectionChanged(this, &SChannelSelectionComboBox::OnSelectionChanged)
+                .OnGenerateWidget(this, &SChannelSelectionComboBox::MakeWidgetForOption)
+                .InitiallySelectedItem(SelectedOption)
+                .Content()
+                [SNew(STextBlock).Text(this, &SChannelSelectionComboBox::GetComboBoxSelection)]
+        ];
+}
+
+void SChannelSelectionComboBox::OnSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+    if (!Mixer)
+    {
+        UE_LOG(LogChannelMixer, Warning, TEXT("Assign mixer reference to texture channel combo box"));
+        return;
+    }
+
+    SelectedOption = NewSelection;
+    EChannelMixerTextureChannel newChannel = FChannelMixerUtils::ChannelFinder(*NewSelection.Get());
+    switch (Channel)
+    {
+        case EChannelMixerTextureChannel::Red:
+            Mixer->RedTextureSelectedChannel = newChannel;
+            break;
+        case EChannelMixerTextureChannel::Green:
+            Mixer->GreenTextureSelectedChannel = newChannel;
+            break;
+        case EChannelMixerTextureChannel::Blue:
+            Mixer->BlueTextureSelectedChannel = newChannel;
+            break;
+        case EChannelMixerTextureChannel::Alpha:
+            Mixer->AlphaTextureSelectedChannel = newChannel;
+            break;
+        default:
+            UE_LOG(LogChannelMixer, Warning, TEXT("No channel assigned to channel combo box"))
+    }
+    
+    Mixer->RegeneratePreviewTexture();
+}
+
+TSharedRef<SWidget> SChannelSelectionComboBox::MakeWidgetForOption(TSharedPtr<FString> InOption)
+{
+    return SNew(STextBlock).Text(FText::FromString(*InOption));
+}
+
+FText SChannelSelectionComboBox::GetComboBoxSelection() const
 {
     return FText::FromString(*SelectedOption);
 }

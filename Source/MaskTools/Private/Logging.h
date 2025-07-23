@@ -5,4 +5,5 @@
 
 #include "CoreMinimal.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(LogEnchancedEditorLogging, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogMaskTools, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogMaskToolsUtils, Log, All);

@@ -22,6 +22,10 @@ private:
 	void AddCBMenuExtension(FMenuBuilder& MenuBuilder);
 	void SplitTextures();
 
+	void SplitTexturesMaterialBased();
+	void SplitTexturesPixelData();
+	void SplitTexturesShaderBased();
+
 	TArray<FAssetData> AssetsSelected;
 	const TArray<FString> SuffixArray = { TEXT("_R"), TEXT("_G") ,TEXT("_B"), TEXT("_A") };
 

@@ -4,22 +4,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MaskEnums.h"
+#include "ImageCore.h"
 #include "MaskToolsConfig.generated.h"
 
-
-UENUM()
-enum class EMaskResolutions : uint8
-{
-	ThirtyTwo UMETA(DisplayName = "32"),
-	SixtyFour UMETA(DisplayName = "64"),
-	OneHundredTwentyEight UMETA(DisplayName = "128"),
-	TwoHundredFiftySix UMETA(DisplayName = "256"),
-	FiveHundredTwelve UMETA(DisplayName = "512"),
-	OneThousandTwentyFour UMETA(DisplayName = "1024"),
-	TwoThousandFortyEight UMETA(DisplayName = "2048"),
-	FourThousandNinetySix UMETA(DisplayName = "4096"),
-	EightThousandOneHundredNinetyTwo UMETA(DisplayName = "8192")
-};
 
 /**
  * 
@@ -33,6 +21,19 @@ class MASKTOOLS_API UMaskToolsConfig : public UObject
 public:
 	UMaskToolsConfig();
 
+	/*
+	Sample
+	*/
+
+	// UPROPERTY(EditAnywhere, config, Category = "Texture Mixer")
+	// EMaskCreationMethod MixerCreationMethod;
+
+	/*
+	Sample
+	*/
+	UPROPERTY(EditAnywhere, config, Category = "Texture Mixer")
+	EResizeMethod MixerResizeMethod;
+	
 	/*
 	Sample
 	*/
@@ -76,6 +77,18 @@ public:
 	*/
 	UPROPERTY(EditAnywhere, config, Category = "Texture Mixer")
 	bool bDefaultAddSuffix;
+
+	/*
+	Sample
+	*/
+	UPROPERTY(EditAnywhere, config, Category = "Texture Splitter")
+	EMaskCreationMethod SplitterCreationMethod;
+
+	/*
+	Sample
+	*/
+	UPROPERTY(EditAnywhere, config, Category = "Texture Splitter")
+	EResizeMethod SplitterResizeMethod;
 
 	/*
 	Defines if Split Channels will attempt to search for completely black channels in splitted textures
