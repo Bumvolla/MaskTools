@@ -16,12 +16,10 @@ public class ChannelMixer : ModuleRules
                 "AssetRegistry",
                 "AssetTools",
                 "ContentBrowser",
-                "EditorScriptingUtilities",
                 "UnrealEd",
                 "RenderCore",
                 "EnchancedEditorLogging",
                 "InputCore",
-                
             }
             );
 

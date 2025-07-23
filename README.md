@@ -11,7 +11,7 @@
      Unreal editor extension with common tools for working with mask textures
     <br/>
     <br/>
-    <a href="https://bumvolla.github.io/2024/12/19/A2FDocs/"><strong>Docs</strong></a>
+    <a href="https://bumvolla.github.io/2025/04/20/MaskToolsDocs/"><strong>Docs</strong></a>
   </p>
   
 ## Introduction and motivations
