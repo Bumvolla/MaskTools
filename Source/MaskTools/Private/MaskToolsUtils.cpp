@@ -10,7 +10,7 @@
 #include "IContentBrowserSingleton.h"
 #include "ImageCore.h"
 #include "Logging.h"
-#include "MaskEnums.h"
+#include "MaskToolsEnums.h"
 #include "MaskToolsConfig.h"
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"

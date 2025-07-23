@@ -4,7 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MaskEnums.h"
+#include "MaskToolsEnums.h"
 #include "ImageCore.h"
 #include "MaskToolsConfig.generated.h"
 

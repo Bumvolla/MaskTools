@@ -3,7 +3,7 @@
 
 #include "ChannelSplitter.h"
 #include "Logging.h"
-#include "MaskEnums.h"
+#include "MaskToolsEnums.h"
 #include "MaskToolsUtils.h"
 
 #include "Modules/ModuleManager.h"
