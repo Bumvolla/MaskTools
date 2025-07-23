@@ -31,7 +31,7 @@ void FMaskToolsUtils::ForceTextureCompilation(UTexture2D* Texture)
     
 }
 
-TArray<UTexture2D*> FMaskToolsUtils::SyncronousLoadCBTextures()
+TArray<UTexture2D*> FMaskToolsUtils::SyncronousLoadCBTextures(TArray<FAssetData>& LoadedAssetData)
 {
     FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>(TEXT("ContentBrowser"));
     TArray<FAssetData> SelectedObjects;
@@ -41,21 +41,28 @@ TArray<UTexture2D*> FMaskToolsUtils::SyncronousLoadCBTextures()
 
     for (FAssetData AssetData : SelectedObjects)
     {
-        TSoftObjectPtr<UTexture2D> SoftTexture(AssetData.GetSoftObjectPath());
-        UTexture2D* Texture = SoftTexture.LoadSynchronous();
-
-        if (!Texture)
-        {
-            continue;
-        }
-
-        //Ensure texture is fully loaded before using it for the render target
-        ForceTextureCompilation(Texture);
-        Texture->UpdateResource();
-
+        UTexture2D* Texture = LoadTextureFromAssetData(AssetData);
         SelectedTextures.Add(Texture);
     }
+
+    LoadedAssetData = SelectedObjects;
     return SelectedTextures;
+}
+
+UTexture2D* FMaskToolsUtils::LoadTextureFromAssetData(const FAssetData& AssetData)
+{
+    TSoftObjectPtr<UTexture2D> SoftTexture(AssetData.GetSoftObjectPath());
+    UTexture2D* Texture = SoftTexture.LoadSynchronous();
+
+    if (!Texture)
+    {
+        return nullptr;
+    }
+
+    //Ensure texture is fully loaded before using it for the render target
+    ForceTextureCompilation(Texture);
+    Texture->UpdateResource();
+    return Texture;
 }
 
 FString FMaskToolsUtils::GetCleanPathName(UObject* OuterObject)

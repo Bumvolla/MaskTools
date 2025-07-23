@@ -18,7 +18,9 @@ struct MASKTOOLS_API FMaskToolsUtils
     
     static void ForceTextureCompilation(UTexture2D* Texture);
 
-    static TArray<UTexture2D*> SyncronousLoadCBTextures();
+    static TArray<UTexture2D*> SyncronousLoadCBTextures(TArray<FAssetData>& LoadedAssetData);
+    
+    static UTexture2D* LoadTextureFromAssetData(const FAssetData& AssetData);
 
     static FString GetCleanPathName(UObject* OuterObject);
 

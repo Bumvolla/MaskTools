@@ -13,7 +13,9 @@
 #include "LevelEditor.h"
 
 #include "ChannelMixerStyle.h"
+#include "ContentBrowserModule.h"
 #include "EnchancedNotifications.h"
+#include "IContentBrowserSingleton.h"
 #include "ImageUtils.h"
 #include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
@@ -47,6 +49,11 @@ void FChannelMixer::ShutdownModule()
 #pragma endregion
 
 #pragma region MenuExtension
+
+void FChannelMixer::SetSelectedAsset(const FAssetData& NewSelectedAsset)
+{
+    SelectedAsset = NewSelectedAsset;
+}
 
 void FChannelMixer::InitToolsMenuExtension()
 {
@@ -163,29 +170,67 @@ FString FChannelMixer::BuildPackagePath()
 #pragma endregion
 
 #pragma region Channel Mixer Logic
-FReply FChannelMixer::ImportTextureFromCB(EChannelMixerChannel Channel)
+ 
+FReply FChannelMixer::TryImportTexture(EChannelMixerChannel Channel)
+{
+    if (ImportTextureFromAssetPicker(Channel))
+    {
+        RegeneratePreviewTexture();
+        return FReply::Handled();
+    }
+
+    if (ImportTextureFromCB(Channel))
+    {
+        RegeneratePreviewTexture();
+        return FReply::Handled();
+    }
+
+    UEnchancedNotifications::LaunchNotification(TEXT("Please select a texture to import"));
+    return FReply::Handled();
+}
+
+bool FChannelMixer::ImportTextureFromCB(EChannelMixerChannel Channel)
 {
 
-    TArray<UTexture2D*> SelectedTextures = FMaskToolsUtils::SyncronousLoadCBTextures();
+    TArray<FAssetData> AssetData;
+    TArray<UTexture2D*> SelectedTextures = FMaskToolsUtils::SyncronousLoadCBTextures(AssetData);
     if (SelectedTextures.Num() == 1)
     {
         if (IsValid(SelectedTextures[0]) && SelectedTextures[0] != GetChannelTexture(Channel))
         {
             UTexture2D* SelectedTexture = SelectedTextures[0];   
             SetNewChannelTexture(SelectedTexture, Channel);
+            SetChannelAssetData(AssetData[0], Channel);
+            return true;
         }
         else
         {
-            return FReply::Unhandled();
+            return false;
         }
     }
     else
     {
-        UEnchancedNotifications::LaunchNotification(TEXT("Please select a texture to import"));
+        UEnchancedNotifications::LaunchNotification(TEXT("Please select a single texture to import"));
+        return false;
+    }
+}
+
+bool FChannelMixer::ImportTextureFromAssetPicker(EChannelMixerChannel Channel)
+{
+    if (!SelectedAsset.IsValid())
+    {
+        return false;
+    }
+    
+    UTexture2D* SelectedTexture = FMaskToolsUtils::LoadTextureFromAssetData(SelectedAsset);
+    if (IsValid(SelectedTexture))
+    {
+        SetNewChannelTexture(SelectedTexture, Channel);
+        SetChannelAssetData(SelectedAsset, Channel);
+        return true;
     }
 
-    RegeneratePreviewTexture();
-    return FReply::Handled();
+    return false;
 }
 
 void FChannelMixer::RegeneratePreviewTexture()
@@ -349,7 +394,29 @@ void FChannelMixer::UpdateSlateChannel(EChannelMixerChannel Channel)
     
 }
 
-FReply FChannelMixer::ToggleContentBrowser()
+void FChannelMixer::SetChannelAssetData(const FAssetData& NewAssetData, EChannelMixerChannel Channel)
+{
+    switch (Channel)
+    {
+    case EChannelMixerChannel::Red:
+        RedAssetData = NewAssetData;
+        break;
+    case EChannelMixerChannel::Green:
+        GreenAssetData = NewAssetData;
+        break;
+    case EChannelMixerChannel::Blue:
+        BlueAssetData = NewAssetData;
+        break;
+    case EChannelMixerChannel::Alpha:
+        AlphaAssetData = NewAssetData;
+        break;
+    default:
+        UE_LOG(LogChannelMixer, Warning, TEXT("No selected slate channel to update"))
+    }
+}
+
+
+FReply FChannelMixer::ToggleContentBrowser(EChannelMixerCBAction Action)
 {
     if (!ContentBrowserBox.IsValid())
     {
@@ -357,9 +424,36 @@ FReply FChannelMixer::ToggleContentBrowser()
     }
 
     const EVisibility CurrentVisibility = ContentBrowserBox->GetVisibility();
-    const bool bShouldShow = (CurrentVisibility != EVisibility::Visible);
+    const bool bIsVisible = (CurrentVisibility == EVisibility::Visible);
 
-    ContentBrowserBox->SetVisibility(bShouldShow ? EVisibility::Visible : EVisibility::Collapsed);
+    switch (Action)
+    {
+        case EChannelMixerCBAction::Open:
+            if (bIsVisible)
+                break;
+            else
+            {
+                ContentBrowserBox->SetVisibility(EVisibility::Visible);
+                break;
+            }
+        case EChannelMixerCBAction::Close:
+            if (bIsVisible)
+            {
+                ContentBrowserBox->SetVisibility(EVisibility::Collapsed);
+                break;
+            }
+            else
+            {
+                break;
+            }
+        case EChannelMixerCBAction::Default:
+            ContentBrowserBox->SetVisibility(bIsVisible ? EVisibility::Collapsed : EVisibility::Visible);
+            break;
+        
+        default:
+        ContentBrowserBox->SetVisibility(bIsVisible ? EVisibility::Collapsed : EVisibility::Visible);
+        
+    }
     return FReply::Handled();
 }
 
@@ -433,7 +527,6 @@ FReply FChannelMixer::RestoreSlotDefaultTexture(EChannelMixerChannel Channel)
 
 void FChannelMixer::SetNewChannelTexture(UTexture2D* NewTexture, EChannelMixerChannel Channel)
 {
-
     switch (Channel)
     {
     case EChannelMixerChannel::Red:
@@ -453,6 +546,35 @@ void FChannelMixer::SetNewChannelTexture(UTexture2D* NewTexture, EChannelMixerCh
     }
     UpdateSlateChannel(Channel);
 }
+
+FReply FChannelMixer::BrowseToAsset(EChannelMixerChannel Channel)
+{
+    FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+    ContentBrowserModule.Get().FocusPrimaryContentBrowser(false);
+    FAssetData AssetToFocus;
+    
+    switch (Channel)
+    {
+        case EChannelMixerChannel::Red:
+            AssetToFocus = RedAssetData;
+            break;
+        case EChannelMixerChannel::Green:
+            AssetToFocus = GreenAssetData;
+            break;
+        case EChannelMixerChannel::Blue:
+            AssetToFocus = BlueAssetData;
+            break;
+        case EChannelMixerChannel::Alpha:
+            AssetToFocus = AlphaAssetData;
+            break;
+    default:
+        UE_LOG(LogChannelMixer, Warning, TEXT("No selected channel to update"))
+    }
+    
+    ContentBrowserModule.Get().SyncBrowserToAssets({AssetToFocus});
+    return FReply::Handled();
+}
+
 #pragma endregion // Close Channel Mixer Logic region
 #undef LOCTEXT_NAMESPACE
 

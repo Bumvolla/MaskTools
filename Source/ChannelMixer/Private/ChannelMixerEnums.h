@@ -9,3 +9,11 @@ enum class EChannelMixerChannel : uint8
 	Alpha UMETA(DisplayName="Alpha"),
 	Result UMETA(DisplayName="Result")
 };
+
+UENUM()
+enum class EChannelMixerCBAction : uint8
+{
+	Open UMETA(DisplayName="Open"),
+	Close UMETA(DisplayName="Close"),
+	Default UMETA(DisplayName="Default")
+};

@@ -106,7 +106,7 @@ TSharedRef<SWidget> FChannelMixerUI::CreateMainLayout(FChannelMixer* Mixer)
         .Padding(4)
         [
          SAssignNew(Mixer->ContentBrowserBox, SBox)
-         .Visibility(EVisibility::Visible)
+         .Visibility(EVisibility::Collapsed)
          [
              CreateContentBrowser(Mixer)
          ]
@@ -146,7 +146,7 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                         .Text(FText::FromString(TEXT("Import")))
                         .OnClicked_Lambda([Channel, Mixer]() -> FReply
                         {
-                            return Mixer->ImportTextureFromCB(Channel);
+                            return Mixer->TryImportTexture(Channel);
                         })
 
                 ]
@@ -161,6 +161,20 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
                             })
                         [
                             SNew(SImage).Image(FAppStyle::GetBrush("GenericCommands.Undo"))
+                        ]
+
+                ]
+            +SHorizontalBox::Slot()
+                .AutoWidth()
+                [
+                    SNew(SButton)
+                        .ToolTipText(FText::FromString(TEXT("Browse to asset")))
+                        .OnClicked_Lambda([Channel, Mixer]() -> FReply
+                            {
+                                return Mixer->BrowseToAsset(Channel);
+                            })
+                        [
+                            SNew(SImage).Image(FAppStyle::GetBrush("LevelEditor.OpenContentBrowser"))
                         ]
 
                 ]
@@ -238,20 +252,25 @@ TSharedRef<SWidget> FChannelMixerUI::CreateTexResSelectionComboBox(FChannelMixer
 TSharedRef<SWidget> FChannelMixerUI::CreateContentBrowser(FChannelMixer* Mixer)
 {
 
+    FARFilter Filter;
+    Filter.ClassPaths.Add(UTexture2D::StaticClass()->GetClassPathName());
+    
+    FAssetPickerConfig AssetPickerConfig;
+    AssetPickerConfig.bCanShowFolders = true;
+    AssetPickerConfig.Filter = Filter;
+    AssetPickerConfig.bCanShowClasses = false;
+    AssetPickerConfig.bForceShowEngineContent = false;
+    AssetPickerConfig.bShowPathInColumnView = true;
+    AssetPickerConfig.bSortByPathInColumnView = true;
+    
+    AssetPickerConfig.OnAssetSelected = FOnAssetSelected::CreateLambda(
+        [Mixer](const FAssetData& SelectedAsset)
+        {
+            Mixer->SetSelectedAsset(SelectedAsset);
+        });
+    
     FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
-    
-    static int32 BrowserInstanceId = 1;
-    FName BrowserInstanceName = *FString::Printf(TEXT("ChannelMixerContentBrowser_%d"), BrowserInstanceId++);
-
-    FContentBrowserConfig ContentBrowserConfig;
-    ContentBrowserConfig.bCanShowFilters = true;
-    ContentBrowserConfig.bCanShowClasses = false;
-    
-    TSharedRef<SWidget> FullContentBrowser = ContentBrowserModule.Get().CreateContentBrowser(
-        BrowserInstanceName,
-        nullptr,
-        &ContentBrowserConfig
-    );
+    TSharedRef<SWidget> FullContentBrowser = ContentBrowserModule.Get().CreateAssetPicker(AssetPickerConfig);
     
     return FullContentBrowser;
 }

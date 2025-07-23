@@ -35,10 +35,18 @@ public:
     TSharedPtr<SImage> PreviewSImage;
 
     // Editor textures references
+    FAssetData RedAssetData;
     UTexture2D* RedTexture;
+
+    FAssetData GreenAssetData;
     UTexture2D* GreenTexture;
+
+    FAssetData BlueAssetData;
     UTexture2D* BlueTexture;
+
+    FAssetData AlphaAssetData;
     UTexture2D* AlphaTexture;
+    
     UTexture2D* PreviewTexture;
 
     UTexture2D* FallbackTexture;
@@ -58,29 +66,33 @@ public:
     FReply ExportTexture();
 
     FReply RestoreSlotDefaultTexture(EChannelMixerChannel Channel);
-    void SetNewChannelTexture(UTexture2D* NewTexture, EChannelMixerChannel Channel);
+    
+    FReply BrowseToAsset(EChannelMixerChannel Channel);
 
-    FReply ImportTextureFromCB(EChannelMixerChannel Channel);
+    FReply TryImportTexture(EChannelMixerChannel Channel);
+
+    FReply ToggleContentBrowser(EChannelMixerCBAction Action = EChannelMixerCBAction::Default);
 
     void RegeneratePreviewTexture();
-    void RegeneratePreviewTexturePixelData();
-    void RegeneratePreviewTextureMaterial();
-
-    void UpdateSlateChannel(EChannelMixerChannel Channel);
-
-    FReply ToggleContentBrowser();
     
+    void SetSelectedAsset(const FAssetData& NewSelectedAsset);
+
     TSharedPtr<SBox> ContentBrowserBox;
-    
     
 private:
     void InitToolsMenuExtension();
     void AddToolsMenuEntry(FMenuBuilder& MenuBuilder);
+    TSharedRef<SDockTab> SpawnTextureMixerTab(const FSpawnTabArgs& Args);
     void InitializeData();
     void OpenTextureMixerWindow();
-    TSharedRef<SDockTab> SpawnTextureMixerTab(const FSpawnTabArgs& Args);
     UTexture2D* GetChannelTexture(EChannelMixerChannel Channel);
-
+    bool ImportTextureFromCB(EChannelMixerChannel Channel);
+    bool ImportTextureFromAssetPicker(EChannelMixerChannel Channel);
     FString BuildPackagePath();
-    
+    void SetNewChannelTexture(UTexture2D* NewTexture, EChannelMixerChannel Channel);
+    void RegeneratePreviewTexturePixelData();
+    void RegeneratePreviewTextureMaterial();
+    void UpdateSlateChannel(EChannelMixerChannel Channel);
+    void SetChannelAssetData(const FAssetData& NewAssetData, EChannelMixerChannel Channel);
+    FAssetData SelectedAsset;
 };
