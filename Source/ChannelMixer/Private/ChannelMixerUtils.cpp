@@ -56,3 +56,16 @@ int32 FChannelMixerUtils::ResFinder(FString SelectedOption)
     return *ResMap.Find(SelectedOption);
 }
 
+EChannelMixerTextureChannel FChannelMixerUtils::ChannelFinder(FString SelectedOption)
+{
+    static TMap<FString, EChannelMixerTextureChannel> ChannelMap
+{
+            {TEXT("Red"), EChannelMixerTextureChannel::Red},
+            {TEXT("Green"), EChannelMixerTextureChannel::Green},
+            {TEXT("Blue"), EChannelMixerTextureChannel::Blue},
+            {TEXT("Alpha"), EChannelMixerTextureChannel::Alpha}
+};
+
+    return *ChannelMap.Find(SelectedOption);
+}
+

@@ -4,14 +4,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Materials/MaterialInstanceDynamic.h"
+#include "ChannelMixer.h"
 
-#include "ChannelMixerUtils.generated.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 /**
  * Utility functions.
  */
-struct FChannelMixerUtils
+struct  FChannelMixerUtils
 {
     // Channel mixer utility functions
 
@@ -19,12 +19,6 @@ struct FChannelMixerUtils
 
     static int32 ResFinder(FString SelectedOption);
 
-
-};
-
-UCLASS(BlueprintType)
-class UChannelMixerBPLib : public UBlueprintFunctionLibrary
-{
-    GENERATED_BODY()
+    static EChannelMixerTextureChannel ChannelFinder(FString SelectedOption);
 
 };

@@ -97,7 +97,8 @@ void FChannelSplitter::SplitTexturesMaterialBased()
     bool _bDiscardEmptyChannels = Config->bDiscardEmptyChannels;
 
     // Cast and store selected content browser assets if textures
-    const TArray<UTexture2D*> SelectedTextures = FMaskToolsUtils::SyncronousLoadCBTextures();
+    TArray<FAssetData> AssetData;
+    const TArray<UTexture2D*> SelectedTextures = FMaskToolsUtils::SyncronousLoadCBTextures(AssetData);
 
     for (UTexture2D* Texture : SelectedTextures)
     {
@@ -198,7 +199,8 @@ void FChannelSplitter::SplitTexturesPixelData()
     bool _bDiscardEmptyChannels = Config->bDiscardEmptyChannels;
 
     // Cast and store selected content browser assets if textures
-    const TArray<UTexture2D*> SelectedTextures = FMaskToolsUtils::SyncronousLoadCBTextures();
+    TArray<FAssetData> AssetData;
+    const TArray<UTexture2D*> SelectedTextures = FMaskToolsUtils::SyncronousLoadCBTextures(AssetData);
 
     for (UTexture2D* Texture : SelectedTextures)
     {

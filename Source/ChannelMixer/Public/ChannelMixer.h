@@ -58,6 +58,11 @@ public:
     FString ExportPath = TEXT("GeneratedMasks");
     int32 TextureResolution = 512;
 
+    EChannelMixerTextureChannel RedTextureSelectedChannel;
+    EChannelMixerTextureChannel GreenTextureSelectedChannel;
+    EChannelMixerTextureChannel BlueTextureSelectedChannel;
+    EChannelMixerTextureChannel AlphaTextureSelectedChannel;
+    
     // UI data
     FString PrefixHintText = TEXT("T");
     FString NameHintText = TEXT("GeneratedMask");

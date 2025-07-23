@@ -17,3 +17,12 @@ enum class EChannelMixerCBAction : uint8
 	Close UMETA(DisplayName="Close"),
 	Default UMETA(DisplayName="Default")
 };
+
+UENUM()
+enum class EChannelMixerTextureChannel : uint8
+{
+	Red UMETA(DisplayName="Red"),
+	Green UMETA(DisplayName="Green"),
+	Blue UMETA(DisplayName="Blue"),
+	Alpha UMETA(DisplayName="Alpha")
+};

@@ -21,6 +21,7 @@ struct FChannelMixerUI
     static float FindDesiredSizeKeepRatio();
     static TSharedRef<SWidget> CreateNameConfigWidget(const FString& Name, const FString& ToolTip, const FString& HintText, FString& ChangedText, FChannelMixer* Mixer);
     static TSharedRef<SWidget> CreateTexResSelectionComboBox(FChannelMixer* Mixer);
+    static TSharedRef<SWidget> CreateTextureChannelSelectionComboBox(FChannelMixer* Mixer, EChannelMixerTextureChannel Channel);
     static TSharedRef<SWidget> CreateContentBrowser(FChannelMixer* Mixer);
     
 };
@@ -41,6 +42,30 @@ private:
     TArray<TSharedPtr<FString>> ComboBoxOptions;
     TSharedPtr<FString> SelectedOption;
     FChannelMixer* Mixer;
+
+    void OnSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+    TSharedRef<SWidget> MakeWidgetForOption(TSharedPtr<FString> InOption);
+    FText GetComboBoxSelection() const;
+};
+
+class SChannelSelectionComboBox : public SCompoundWidget
+{
+public:
+    SLATE_BEGIN_ARGS(SChannelSelectionComboBox)
+        : _Mixer(nullptr), _Channel()
+    {}
+    SLATE_ARGUMENT(FChannelMixer*, Mixer)
+    SLATE_ARGUMENT(EChannelMixerTextureChannel, Channel)
+    SLATE_END_ARGS()
+
+void Construct(const FArguments& InArgs);
+
+private:
+    TSharedPtr<SComboBox<TSharedPtr<FString>>> ComboBox;
+    TArray<TSharedPtr<FString>> ComboBoxOptions;
+    TSharedPtr<FString> SelectedOption;
+    FChannelMixer* Mixer;
+    EChannelMixerTextureChannel Channel;
 
     void OnSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
     TSharedRef<SWidget> MakeWidgetForOption(TSharedPtr<FString> InOption);

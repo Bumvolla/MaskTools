@@ -259,7 +259,7 @@ void FChannelMixer::RegeneratePreviewTexturePixelData()
     TArray<FColor> RChannel, GChannel, BChannel, AChannel;
     TArray<TArray<FColor>> ChannelData;
 
-    auto GetTextureChannelData = [this] (UTexture2D* Texture, TArray<FColor>& ChannelData)
+    auto GetTextureChannelData = [this] (UTexture2D* Texture, EChannelMixerTextureChannel SelectedChannel, TArray<FColor>& ChannelData)
     {
         TArray<FLinearColor> TexturePixelValues;
         
@@ -274,14 +274,28 @@ void FChannelMixer::RegeneratePreviewTexturePixelData()
         for (FLinearColor LinearPixelData : TexturePixelValues)
         {
             FColor Color = LinearPixelData.ToFColor(true);
-            ChannelData.Add(FColor(Color.R, 0 ,0 ,0));
+            switch (SelectedChannel)
+            {
+            case EChannelMixerTextureChannel::Red:
+                ChannelData.Add(FColor(Color.R, 0 ,0 ,0));
+                break;
+            case EChannelMixerTextureChannel::Green:
+                ChannelData.Add(FColor(Color.G, 0 ,0 ,0));
+                break;
+            case EChannelMixerTextureChannel::Blue:
+                ChannelData.Add(FColor(Color.B, 0 ,0 ,0));
+                break;
+            case EChannelMixerTextureChannel::Alpha:
+                ChannelData.Add(FColor(Color.A, 0 ,0 ,0));
+                break;
+            }
         }
     };
     
-    GetTextureChannelData(RedTexture, RChannel);
-    GetTextureChannelData(GreenTexture, GChannel);
-    GetTextureChannelData(BlueTexture, BChannel);
-    GetTextureChannelData(AlphaTexture, AChannel);
+    GetTextureChannelData(RedTexture, RedTextureSelectedChannel, RChannel);
+    GetTextureChannelData(GreenTexture, GreenTextureSelectedChannel, GChannel);
+    GetTextureChannelData(BlueTexture, BlueTextureSelectedChannel, BChannel);
+    GetTextureChannelData(AlphaTexture, AlphaTextureSelectedChannel, AChannel);
     
     ChannelData.Add(RChannel);
     ChannelData.Add(GChannel);
