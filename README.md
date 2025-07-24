@@ -1,4 +1,4 @@
-<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.1%2B-dea309)</a>
+<a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.4%2B-dea309)</a>
 
 <br/>
 <p align="center">
@@ -42,15 +42,19 @@ or, if you already got your unreal project in a git repository:
 git submodule add https://github.com/Bumvolla/MaskTools.git
 ~~~
 
+
+
 If not, you can download the .zip file in the [latest release](https://github.com/Bumvolla/MaskTools/releases/latest) and extract it in your project "Plugins" folder
 
 ## Features
 
 ### Texture Mixer
 
-Merge up to 4 grayscale textures into one single RGBA texture using an editor built-in interface.
+- Merge up to 4 grayscale textures into one single RGBA texture using an editor built-in dockeable tab.
+- Choose one of up to 12 resize methods for your texture.
+- Use the default content browser or the built in asset picker
 
-<img width="755" alt="Screenshot 2025-04-06 220947" src="https://github.com/user-attachments/assets/7aa34d4a-0e6a-4d5f-bab5-5289514a3672" />
+<img width="1260" height="762" alt="MaskExample" src="https://github.com/user-attachments/assets/1f1ce3f0-4d5b-4619-b5c7-16c910fd5382" />
 
 ### Texture Splitter
 
