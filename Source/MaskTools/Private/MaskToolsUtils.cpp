@@ -25,10 +25,6 @@ void FMaskToolsUtils::ForceTextureCompilation(UTexture2D* Texture)
     
     FTextureCompilingManager::Get().FinishCompilation({ Texture });
     Texture->SetForceMipLevelsToBeResident(1.f);
-    if (!Texture->IsFullyStreamedIn() && Texture->IsStreamable())
-    {
-        Texture->WaitForPendingInitOrStreaming(true);
-    }
     
 }
 
