@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// Copyright (c) 2025 Sora Mas
+// All rights reserved.
+
+#pragma once
 
 UENUM()
 enum class EChannelMixerChannel : uint8
