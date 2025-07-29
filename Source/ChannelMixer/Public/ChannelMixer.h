@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "Logging.h"
 #include "ChannelMixerEnums.h"
+#include "MaskToolsEnums.h"
 
 /**
  * Main module class that holds state and initializes the texture mixer.
@@ -58,10 +59,17 @@ public:
     FString ExportPath = TEXT("GeneratedMasks");
     int32 TextureResolution = 512;
 
+    // Stores what channel to use for each channel
     EChannelMixerTextureChannel RedTextureSelectedChannel;
     EChannelMixerTextureChannel GreenTextureSelectedChannel;
     EChannelMixerTextureChannel BlueTextureSelectedChannel;
     EChannelMixerTextureChannel AlphaTextureSelectedChannel;
+
+    //Resize methods to use for each channel
+    EResizeMethod RedResizeMethod;
+    EResizeMethod GreenResizeMethod;
+    EResizeMethod BlueResizeMethod;
+    EResizeMethod AlphaResizeMethod;
     
     // UI data
     FString PrefixHintText = TEXT("T");

@@ -69,3 +69,24 @@ EChannelMixerTextureChannel FChannelMixerUtils::ChannelFinder(FString SelectedOp
     return *ChannelMap.Find(SelectedOption);
 }
 
+EResizeMethod FChannelMixerUtils::ResizeFilterFinder(FString SelectedOption)
+{
+    static TMap<FString, EResizeMethod> ResizeMethodMap
+    {
+    {TEXT("Default"), EResizeMethod::Default},
+    {TEXT("PointSample"), EResizeMethod::PointSample},
+    {TEXT("Box"), EResizeMethod::Box},
+    {TEXT("Triangle"), EResizeMethod::Triangle},
+    {TEXT("Bilinear"), EResizeMethod::Triangle},
+    {TEXT("CubicGaussian"), EResizeMethod::CubicGaussian},
+    {TEXT("CubicSharp"), EResizeMethod::CubicSharp},
+    {TEXT("CubicMitchell"), EResizeMethod::CubicMitchell},
+    {TEXT("AdaptiveSharp"), EResizeMethod::AdaptiveSharp},
+    {TEXT("AdaptiveSmooth"), EResizeMethod::AdaptiveSmooth}
+                    
+    };
+
+    return *ResizeMethodMap.Find(SelectedOption);
+    
+}
+

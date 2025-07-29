@@ -21,4 +21,6 @@ struct  FChannelMixerUtils
 
     static EChannelMixerTextureChannel ChannelFinder(FString SelectedOption);
 
+    static  EResizeMethod ResizeFilterFinder(FString SelectedOption);
+
 };

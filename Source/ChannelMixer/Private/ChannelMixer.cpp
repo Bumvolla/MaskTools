@@ -259,12 +259,20 @@ void FChannelMixer::RegeneratePreviewTexturePixelData()
     TArray<FColor> RChannel, GChannel, BChannel, AChannel;
     TArray<TArray<FColor>> ChannelData;
 
-    auto GetTextureChannelData = [this] (UTexture2D* Texture, EChannelMixerTextureChannel SelectedChannel, TArray<FColor>& ChannelData)
+    auto GetTextureChannelData = [this] (UTexture2D* Texture, EChannelMixerTextureChannel SelectedChannel, EResizeMethod SelectedResizeMethod,  TArray<FColor>& ChannelData)
     {
         TArray<FLinearColor> TexturePixelValues;
-        
-        const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
-        EResizeMethod ResizeMethod = Config->MixerResizeMethod;
+
+        EResizeMethod ResizeMethod;
+        if (SelectedResizeMethod == EResizeMethod::Default)
+        {
+            const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+            ResizeMethod = Config->MixerResizeMethod;
+        }
+        else
+        {
+            ResizeMethod = SelectedResizeMethod;
+        }
         
         if (!FMaskToolsUtils::GetTexturePixelData(Texture, TextureResolution,  ResizeMethod, TexturePixelValues))
         {
@@ -292,10 +300,10 @@ void FChannelMixer::RegeneratePreviewTexturePixelData()
         }
     };
     
-    GetTextureChannelData(RedTexture, RedTextureSelectedChannel, RChannel);
-    GetTextureChannelData(GreenTexture, GreenTextureSelectedChannel, GChannel);
-    GetTextureChannelData(BlueTexture, BlueTextureSelectedChannel, BChannel);
-    GetTextureChannelData(AlphaTexture, AlphaTextureSelectedChannel, AChannel);
+    GetTextureChannelData(RedTexture, RedTextureSelectedChannel, RedResizeMethod, RChannel);
+    GetTextureChannelData(GreenTexture, GreenTextureSelectedChannel, GreenResizeMethod, GChannel);
+    GetTextureChannelData(BlueTexture, BlueTextureSelectedChannel, BlueResizeMethod, BChannel);
+    GetTextureChannelData(AlphaTexture, AlphaTextureSelectedChannel, AlphaResizeMethod, AChannel);
     
     ChannelData.Add(RChannel);
     ChannelData.Add(GChannel);
