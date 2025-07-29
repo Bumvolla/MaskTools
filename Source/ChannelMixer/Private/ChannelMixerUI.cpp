@@ -218,6 +218,11 @@ TSharedRef<SWidget> FChannelMixerUI::CreateChannelWidget(const FString& ChannelN
         .AutoHeight()
         [
             CreateTextureChannelSelectionComboBox(Mixer, newChannel)
+        ]
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            CreateResizeMethodSelectionComboBox(Mixer, newChannel)
         ];
 }
 
@@ -303,6 +308,28 @@ TSharedRef<SWidget> FChannelMixerUI::CreateTextureChannelSelectionComboBox(FChan
                         [
                             SNew(SChannelSelectionComboBox)
                                 .ToolTipText(FText::FromString(TEXT("Selected channel")))
+                                .Mixer(Mixer)
+                                .Channel(Channel)
+                        ]
+
+                ]
+        ];
+}
+
+TSharedRef<SWidget> FChannelMixerUI::CreateResizeMethodSelectionComboBox(FChannelMixer* Mixer, EChannelMixerTextureChannel Channel)
+{
+    return SNew(SBorder)
+        .BorderBackgroundColor(FLinearColor::Black)
+        [
+            SNew(SVerticalBox)
+                + SVerticalBox::Slot()
+                .AutoHeight()
+                [
+                    SNew(SBox)
+                        .HeightOverride(30)
+                        [
+                            SNew(SResizeAlgorithmComboBox)
+                                .ToolTipText(FText::FromString(TEXT("Selected resize method")))
                                 .Mixer(Mixer)
                                 .Channel(Channel)
                         ]
@@ -455,6 +482,80 @@ TSharedRef<SWidget> SChannelSelectionComboBox::MakeWidgetForOption(TSharedPtr<FS
 }
 
 FText SChannelSelectionComboBox::GetComboBoxSelection() const
+{
+    return FText::FromString(*SelectedOption);
+}
+
+void SResizeAlgorithmComboBox::Construct(const FArguments& InArgs)
+{
+    Mixer = InArgs._Mixer;
+    Channel = InArgs._Channel;
+
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("Default")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("PointSample")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("Box")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("Triangle")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("Bilinear")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("CubicGaussian")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("CubicSharp")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("CubicMitchell")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("AdaptiveSharp")));
+    ComboBoxOptions.Add(MakeShared<FString>(TEXT("AdaptiveSmooth")));
+
+    
+    const UMaskToolsConfig* Config = GetDefault<UMaskToolsConfig>();
+    int32 EnumIndex = StaticEnum<EResizeMethod>()->GetIndexByValue(static_cast<int64>(Config->DefaultMaskResolution));
+    SelectedOption = ComboBoxOptions[EnumIndex];
+
+    ChildSlot
+        [
+            SNew(SComboBox<TSharedPtr<FString>>)
+                .OptionsSource(&ComboBoxOptions)
+                .OnSelectionChanged(this, &SResizeAlgorithmComboBox::OnSelectionChanged)
+                .OnGenerateWidget(this, &SResizeAlgorithmComboBox::MakeWidgetForOption)
+                .InitiallySelectedItem(SelectedOption)
+                .Content()
+                [SNew(STextBlock).Text(this, &SResizeAlgorithmComboBox::GetComboBoxSelection)]
+        ];
+}
+
+void SResizeAlgorithmComboBox::OnSelectionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+    if (!Mixer)
+    {
+        UE_LOG(LogChannelMixer, Warning, TEXT("Assign mixer reference to texture channel combo box"));
+        return;
+    }
+
+    SelectedOption = NewSelection;
+    EResizeMethod newResizeMethod = FChannelMixerUtils::ResizeFilterFinder(*NewSelection);
+    switch (Channel)
+    {
+    case EChannelMixerTextureChannel::Red:
+        Mixer->RedResizeMethod = newResizeMethod;
+        break;
+    case EChannelMixerTextureChannel::Green:
+        Mixer->GreenResizeMethod = newResizeMethod;
+        break;
+    case EChannelMixerTextureChannel::Blue:
+        Mixer->BlueResizeMethod = newResizeMethod;
+        break;
+    case EChannelMixerTextureChannel::Alpha:
+        Mixer->AlphaResizeMethod = newResizeMethod;
+        break;
+    default:
+        UE_LOG(LogChannelMixer, Warning, TEXT("No channel assigned to resize method combo box"))
+    }
+    
+    Mixer->RegeneratePreviewTexture();
+}
+
+TSharedRef<SWidget> SResizeAlgorithmComboBox::MakeWidgetForOption(TSharedPtr<FString> InOption)
+{
+    return SNew(STextBlock).Text(FText::FromString(*InOption));
+}
+
+FText SResizeAlgorithmComboBox::GetComboBoxSelection() const
 {
     return FText::FromString(*SelectedOption);
 }

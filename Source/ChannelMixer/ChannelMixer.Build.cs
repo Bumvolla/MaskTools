@@ -19,7 +19,7 @@ public class ChannelMixer : ModuleRules
                 "UnrealEd",
                 "RenderCore",
                 "EnchancedEditorLogging",
-                "InputCore",
+                "InputCore", "MaskTools",
             }
             );
 
