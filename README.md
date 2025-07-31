@@ -26,7 +26,7 @@ For more information refer to these documentation pages:
 
 ## Installation
 
-The plugin can be adquired in [Fab](https://www.fab.com/listings/0d7fb6db-b5ad-4375-9330-f659a633ffd1) or cloned or downloaded for free from [GitHub](https://github.com/Bumvolla/MaskTools).
+The plugin can be adquired in [Fab](https://www.fab.com/listings/a23c2cbb-7459-499c-8595-0e4e95379b81) or cloned or downloaded for free from [GitHub](https://github.com/Bumvolla/MaskTools).
 
 If you got Git installed on your computer you can clone the repository by typing this command in a terminal in your engine "Plugins/Marketplace" folder or your project "Plugins" folder:
 
