@@ -1,18 +1,13 @@
 <a href="https://www.unrealengine.com/">![Unreal Engine](https://img.shields.io/badge/Unreal-5.4%2B-dea309)</a>
-
-<br/>
-<p align="center">
-  <a href="https://github.com/Bumvolla/MaskTools">
-    <img src="Resources/Icon128.png" alt="Logo" width="80" height="80">
-  </a>
-<h3 align="center">Mask Tools</h3>
-
+<img width="1920" height="1080" alt="FabBanner" src="https://github.com/user-attachments/assets/59edd018-bc4e-4696-b640-17fcfbcd2141" />
   <p align="center">
-     Unreal editor extension with common tools for working with mask textures
-    <br/>
-    <br/>
     <a href="https://bumvolla.github.io/2025/04/20/MaskToolsDocs/"><strong>Docs</strong></a>
+    <br/>
+    <br/>
+     <b>Pack and unpack grayscale textures into a texture RGBA channels.</b>
+    <br/>
   </p>
+
   
 ## Introduction and motivations
 
